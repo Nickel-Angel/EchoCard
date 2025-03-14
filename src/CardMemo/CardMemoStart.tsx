@@ -9,20 +9,20 @@ import Paper from "@mui/material/Paper";
 
 interface CardMemoStartProps {
   deckName: string;
-  newCardsCount: number;
-  learningCardsCount: number;
-  reviewCardsCount: number;
+  tolearn: number;
+  learning: number;
+  toreview: number;
   onStartStudy: () => void;
 }
 
 function CardMemoStart({
   deckName,
-  newCardsCount,
-  learningCardsCount,
-  reviewCardsCount,
+  tolearn,
+  learning,
+  toreview,
   onStartStudy,
 }: CardMemoStartProps) {
-  const totalCards = newCardsCount + learningCardsCount + reviewCardsCount;
+  const totalCards = tolearn + learning + toreview;
 
   return (
     <Card sx={{ maxWidth: 600, mx: "auto", mt: 4 }}>
@@ -47,7 +47,7 @@ function CardMemoStart({
                   color: "primary.contrastText",
                 }}
               >
-                <Typography variant="h5">{newCardsCount}</Typography>
+                <Typography variant="h5">{tolearn}</Typography>
                 <Typography variant="body2">未学习</Typography>
               </Paper>
             </Grid>
@@ -62,7 +62,7 @@ function CardMemoStart({
                   color: "warning.contrastText",
                 }}
               >
-                <Typography variant="h5">{learningCardsCount}</Typography>
+                <Typography variant="h5">{learning}</Typography>
                 <Typography variant="body2">学习中</Typography>
               </Paper>
             </Grid>
@@ -77,7 +77,7 @@ function CardMemoStart({
                   color: "info.contrastText",
                 }}
               >
-                <Typography variant="h5">{reviewCardsCount}</Typography>
+                <Typography variant="h5">{toreview}</Typography>
                 <Typography variant="body2">待复习</Typography>
               </Paper>
             </Grid>

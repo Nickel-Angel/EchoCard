@@ -6,27 +6,21 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 
-interface CardMemoActionProps {
+interface CardMemoTextProps {
   frontContent: string;
   backContent: string;
-  onRating?: (rating: number) => void;
+  handleRating?: (rating: number) => void;
 }
 
-function CardMemoAction({
+function CardMemoText({
   frontContent,
   backContent,
-  onRating = () => {},
-}: CardMemoActionProps) {
+  handleRating = () => {},
+}: CardMemoTextProps) {
   const [showBack, setShowBack] = useState(false);
 
   const handleToggleContent = () => {
     setShowBack(!showBack);
-  };
-
-  const handleRating = (rating: number) => {
-    onRating(rating);
-    // TODO: get next card from backend.
-    setShowBack(false);
   };
 
   // TODO: add schedule time in button.
@@ -95,4 +89,4 @@ function CardMemoAction({
   );
 }
 
-export default CardMemoAction;
+export default CardMemoText;

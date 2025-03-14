@@ -10,8 +10,10 @@ import { Modal, styled } from "@mui/material";
 import { useState } from "react";
 import CardMemoStart from "./CardMemoStart";
 import Box from "@mui/material/Box";
+import { useNavigate } from "react-router-dom";
 
 interface DeckData {
+  deckId: number;
   name: string;
   tolearn: number;
   learning: number;
@@ -19,12 +21,13 @@ interface DeckData {
 }
 
 function createDeckData(
+  deckId: number,
   name: string,
   tolearn: number,
   learning: number,
   toreview: number
 ): DeckData {
-  return { name, tolearn, learning, toreview };
+  return { deckId, name, tolearn, learning, toreview };
 }
 
 const TextButton = styled(Button)({
@@ -35,6 +38,7 @@ const TextButton = styled(Button)({
 const DenseTable = ({ rows }: { rows: DeckData[] }) => {
   const [open, setOpen] = useState(false);
   const [selectedDeck, setSelectedDeck] = useState<DeckData | null>(null);
+  const navigate = useNavigate();
 
   const handleOpen = (deck: DeckData) => {
     setSelectedDeck(deck);
@@ -48,7 +52,17 @@ const DenseTable = ({ rows }: { rows: DeckData[] }) => {
   const handleStartStudy = () => {
     console.log(`开始学习牌组: ${selectedDeck?.name}`);
     setOpen(false);
-    // TODO: 实现开始学习的逻辑
+    if (selectedDeck) {
+      navigate("/card-memo-learning", {
+        state: {
+          deckId: selectedDeck.deckId,
+          deckName: selectedDeck.name,
+          tolearn: selectedDeck.tolearn,
+          learning: selectedDeck.learning,
+          toreview: selectedDeck.toreview,
+        },
+      });
+    }
   };
 
   return (
@@ -106,9 +120,9 @@ const DenseTable = ({ rows }: { rows: DeckData[] }) => {
           {selectedDeck && (
             <CardMemoStart
               deckName={selectedDeck.name}
-              newCardsCount={selectedDeck.tolearn}
-              learningCardsCount={selectedDeck.learning}
-              reviewCardsCount={selectedDeck.toreview}
+              tolearn={selectedDeck.tolearn}
+              learning={selectedDeck.learning}
+              toreview={selectedDeck.toreview}
               onStartStudy={handleStartStudy}
             />
           )}
@@ -121,11 +135,11 @@ const DenseTable = ({ rows }: { rows: DeckData[] }) => {
 function CardMemoMain() {
   // TODO: get deck data from back-end
   const rows: DeckData[] = [
-    createDeckData("Frozen yoghurt", 159, 6, 24),
-    createDeckData("Ice cream sandwich", 237, 9, 37),
-    createDeckData("Eclair", 262, 16, 24),
-    createDeckData("Cupcake", 305, 3, 67),
-    createDeckData("Gingerbread", 356, 16, 49),
+    createDeckData(1, "Frozen yoghurt", 159, 6, 24),
+    createDeckData(2, "Ice cream sandwich", 237, 9, 37),
+    createDeckData(3, "Eclair", 262, 16, 24),
+    createDeckData(4, "Cupcake", 305, 3, 67),
+    createDeckData(5, "Gingerbread", 356, 16, 49),
   ];
   // TODO: get learning time and learning number from back-end
   const learningTime = 0;
