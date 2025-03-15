@@ -41,12 +41,10 @@ function CardMemoEnd() {
   return (
     <Card sx={{ maxWidth: 600, mx: "auto", mt: 4 }}>
       <CardContent>
-        <Box sx={{ textAlign: "center", mb: 4 }}>
-          <CheckCircleOutlineIcon
-            sx={{ fontSize: 64, color: green[500], mb: 2 }}
-          />
+        <Box sx={{ textAlign: "center" }}>
+          <CheckCircleOutlineIcon sx={{ fontSize: 64, color: green[500] }} />
           <Typography variant="h4" component="h1" gutterBottom>
-            学习完成！
+            学习完成 !
           </Typography>
           <Typography variant="h5" color="text.secondary" gutterBottom>
             {deckName}
@@ -75,7 +73,7 @@ function CardMemoEnd() {
             </Paper>
           </Grid>
           <Grid size={12}>
-            <Paper elevation={2} sx={{ p: 2, textAlign: "center", mt: 2 }}>
+            <Paper elevation={2} sx={{ p: 2, textAlign: "center" }}>
               <Typography variant="h6" gutterBottom>
                 学习用时
               </Typography>

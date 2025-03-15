@@ -54,7 +54,7 @@ function App() {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, bgcolor: "background.paper", display: "flex" }}>
+    <Box sx={{ flexGrow: 1, bgcolor: "background.paper", display: "flex", height: "100%", overflow: "hidden" }}>
       <Tabs
         orientation="vertical"
         value={value}
