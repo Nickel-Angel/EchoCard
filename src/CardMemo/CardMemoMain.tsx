@@ -177,20 +177,20 @@ function CardMemoMain() {
     );
   }
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
       }}
     >
-      <p style={{ paddingTop: "20px", textAlign: "center" }}>
+      <Box sx={{ paddingTop: "20px", textAlign: "center" }}>
         你还没有卡组哦，快去添加卡组吧~
         <br />
         <br />
         <Button variant="contained">添加卡组</Button>
-      </p>
-    </div>
+      </Box>
+    </Box>
   );
 }
 

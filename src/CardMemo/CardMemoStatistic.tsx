@@ -4,12 +4,7 @@ import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid2";
-import Button from "@mui/material/Button";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import { useNavigate } from "react-router-dom";
+import { SelectChangeEvent } from "@mui/material/Select";
 import {
   BarChart,
   Bar,
@@ -23,26 +18,13 @@ import {
   Pie,
   Cell,
 } from "recharts";
-
-interface DeckDataItem {
-  deckIndex: number;
-  name: string;
-  tolearn: number;
-  learning: number;
-  toreview: number;
-}
-
-interface ForecastDataItem {
-  date: string;
-  type: string;
-  missed?: number;
-  forecast?: number;
-}
-
-interface reviewDataItem {
-  date: string;
-  reviewed: number;
-}
+import {
+  StatisticHeader,
+  StatisticFooter,
+  DeckDataItem,
+  ForecastDataItem,
+  reviewDataItem,
+} from "./StatisticUtils";
 
 // 模拟牌组数据 - 实际应用中应从后端获取
 const generateDecks = (): DeckDataItem[] => [
@@ -102,11 +84,16 @@ const generateForecastData = (): ForecastDataItem[] => {
   return data;
 };
 
-const generateStatusData = () => [
-  { name: "未学习", value: 1, color: "#8884d8" },
-  { name: "学习中", value: 1, color: "#82ca9d" },
-  { name: "已掌握", value: 1, color: "#ffc658" },
-  { name: "待复习", value: 1, color: "#ff8042" },
+const generateStatusData = (
+  tolearn: number = 1,
+  learning: number = 0,
+  reviewed: number = 0,
+  toreview: number = 0
+) => [
+  { name: "未学习", value: tolearn, color: "#8884d8" },
+  { name: "学习中", value: learning, color: "#82ca9d" },
+  { name: "已掌握", value: reviewed, color: "#ffc658" },
+  { name: "待复习", value: toreview, color: "#ff8042" },
 ];
 
 const generateReviewData = (): reviewDataItem[] => {
@@ -131,7 +118,6 @@ function CardMemoStatistic() {
   const [forecastData, setForecastData] = useState(generateForecastData());
   const [statusData, setStatusData] = useState(generateStatusData());
   const [reviewData, setReviewData] = useState(generateReviewData());
-  const navigate = useNavigate();
 
   const handleDeckChange = (e: SelectChangeEvent<number>) => {
     if (e.target.value === null) {
@@ -144,7 +130,7 @@ function CardMemoStatistic() {
     if (e.target.value === 0) {
       // 全部牌组数据
       setForecastData(generateForecastData());
-      setStatusData(generateStatusData());
+      setStatusData(generateStatusData(23, 49, 30, 32));
       setReviewData(generateReviewData());
     } else {
       // 特定牌组数据 - 这里简单修改一下数据以示区别
@@ -157,7 +143,7 @@ function CardMemoStatistic() {
         }))
       );
       setStatusData(
-        generateStatusData().map((item) => ({
+        generateStatusData(23, 49, 30, 32).map((item) => ({
           ...item,
           value: Math.floor(item.value * multiplier),
         }))
@@ -174,47 +160,11 @@ function CardMemoStatistic() {
   return (
     <Box sx={{ maxWidth: 1200, mx: "auto", px: 2 }}>
       {/* 固定在顶部的导航栏 */}
-      <Box
-        sx={{
-          position: "sticky",
-          top: 0,
-          zIndex: 1100,
-          backgroundColor: "background.paper",
-          py: 2,
-          borderBottom: 1,
-          borderColor: "divider",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          width: "100%",
-        }}
-      >
-        <Typography variant="h5" component="h1">
-          学习统计
-        </Typography>
-
-        <FormControl sx={{ minWidth: 200 }} size="small">
-          <InputLabel id="deck-select-label">选择牌组</InputLabel>
-          <Select
-            labelId="deck-select-label"
-            id="deck-select"
-            value={selectedDeckId}
-            label="选择牌组"
-            onChange={handleDeckChange}
-            size="small"
-          >
-            {decks.map((deck) => (
-              <MenuItem
-                key={deck.deckIndex}
-                value={deck.deckIndex}
-                sx={deck.deckIndex === 0 ? { fontWeight: "bold" } : {}}
-              >
-                {deck.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Box>
+      <StatisticHeader
+        decks={decks}
+        selectedDeckId={selectedDeckId}
+        handleDeckChange={handleDeckChange}
+      />
 
       <Box sx={{ mt: 4 }}>
         <Grid container spacing={3}>
@@ -353,48 +303,7 @@ function CardMemoStatistic() {
       </Box>
 
       {/* 固定在底部的导航栏 */}
-      <Box
-        sx={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 1100,
-          backgroundColor: "background.paper",
-          py: 2,
-          borderTop: 1,
-          borderColor: "divider",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          width: "100%",
-          boxShadow: 3,
-        }}
-      >
-        <Box
-          sx={{
-            width: "100%",
-            maxWidth: 1200,
-            px: 4,
-            display: "flex",
-            justifyContent: "flex-end",
-          }}
-        >
-          <Button
-            variant="contained"
-            size="small"
-            onClick={() => {
-              navigate("/");
-            }}
-            sx={{ minWidth: 120 }}
-          >
-            返回主页
-          </Button>
-        </Box>
-      </Box>
-
-      {/* 添加底部空间，防止内容被底部导航栏遮挡 */}
-      <Box sx={{ height: 80 }} />
+      <StatisticFooter />
     </Box>
   );
 }

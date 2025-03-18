@@ -1,6 +1,5 @@
 import { useState } from "react";
 // import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
 import CardMemoMain from "./CardMemo/CardMemoMain";
 import CardEditMain from "./CardEdit/CardEditMain";
 import SettingsMain from "./Settings/SettingsMain";
@@ -23,7 +22,7 @@ function TabPanel(props: TabPanelProps) {
 
   return (
     <div
-      className="tabpanel"
+      style={{ width: "88%" }}
       role="tabpanel"
       hidden={value !== index}
       id={`vertical-tabpanel-${index}`}
@@ -54,7 +53,15 @@ function App() {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, bgcolor: "background.paper", display: "flex", height: "100%", overflow: "hidden" }}>
+    <Box
+      sx={{
+        flexGrow: 1,
+        bgcolor: "background.paper",
+        display: "flex",
+        height: "100%",
+        overflow: "hidden",
+      }}
+    >
       <Tabs
         orientation="vertical"
         value={value}
