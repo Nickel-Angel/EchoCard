@@ -10,7 +10,7 @@ import { Modal, styled } from "@mui/material";
 import { useState } from "react";
 import CardMemoStart from "./CardMemoStart";
 import Box from "@mui/material/Box";
-import { useNavigate } from "react-router-dom";
+import { NavigateFunction, useNavigate } from "react-router-dom";
 
 interface DeckData {
   deckId: number;
@@ -30,15 +30,19 @@ function createDeckData(
   return { deckId, name, tolearn, learning, toreview };
 }
 
+interface DenseTableProps {
+  rows: DeckData[];
+  navigate: NavigateFunction;
+}
+
 const TextButton = styled(Button)({
   textTransform: "none",
   justifyContent: "flex-start",
 });
 
-const DenseTable = ({ rows }: { rows: DeckData[] }) => {
+const DenseTable = ({ rows, navigate }: DenseTableProps) => {
   const [open, setOpen] = useState(false);
   const [selectedDeck, setSelectedDeck] = useState<DeckData | null>(null);
-  const navigate = useNavigate();
 
   const handleOpen = (deck: DeckData) => {
     setSelectedDeck(deck);
@@ -144,13 +148,31 @@ function CardMemoMain() {
   // TODO: get learning time and learning number from back-end
   const learningTime = 0;
   const learningNumber = 0;
+  const navigate = useNavigate();
+
   if (rows.length !== 0) {
     return (
       <div>
-        <DenseTable rows={rows} />
-        <p style={{ paddingTop: "20px" }}>
-          今天共学习了 {learningTime} 分钟，学习了 {learningNumber} 张卡片。
-        </p>
+        <DenseTable navigate={navigate} rows={rows} />
+        <div
+          style={{
+            paddingTop: "20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          <p>
+            今天共学习了 {learningTime} 分钟，学习了 {learningNumber} 张卡片。
+          </p>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => navigate("/card-memo-statistic")}
+          >
+            查看详细统计
+          </Button>
+        </div>
       </div>
     );
   }
