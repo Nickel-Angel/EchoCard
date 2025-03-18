@@ -131,4 +131,26 @@ function StatisticFooter() {
   );
 }
 
-export { StatisticHeader, StatisticFooter };
+interface NoDataMessageProps {
+  message?: string;
+}
+
+function NoDataMessage({ message = "没有数据" }: NoDataMessageProps) {
+  return (
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "column",
+      }}
+    >
+      <Typography variant="h6" color="text.secondary">
+        {message}
+      </Typography>
+    </Box>
+  );
+}
+
+export { StatisticHeader, StatisticFooter, NoDataMessage };

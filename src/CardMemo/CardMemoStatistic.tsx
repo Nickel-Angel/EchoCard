@@ -21,6 +21,7 @@ import {
 import {
   StatisticHeader,
   StatisticFooter,
+  NoDataMessage,
   DeckDataItem,
   ForecastDataItem,
   reviewDataItem,
@@ -85,7 +86,7 @@ const generateForecastData = (): ForecastDataItem[] => {
 };
 
 const generateStatusData = (
-  tolearn: number = 1,
+  tolearn: number = 0,
   learning: number = 0,
   reviewed: number = 0,
   toreview: number = 0
@@ -183,30 +184,34 @@ function CardMemoStatistic() {
                   显示过去未复习的卡片和未来需要复习的卡片数量
                 </Typography>
                 <Box sx={{ height: 300 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={forecastData}
-                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar
-                        dataKey="missed"
-                        name="未复习"
-                        fill="#ff8042"
-                        radius={[4, 4, 0, 0]}
-                      />
-                      <Bar
-                        dataKey="forecast"
-                        name="待复习"
-                        fill="#8884d8"
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {forecastData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={forecastData}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar
+                          dataKey="missed"
+                          name="未复习"
+                          fill="#ff8042"
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="forecast"
+                          name="待复习"
+                          fill="#8884d8"
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <NoDataMessage message="暂无复习预测数据" />
+                  )}
                 </Box>
               </CardContent>
             </Card>
@@ -234,29 +239,35 @@ function CardMemoStatistic() {
                     pointerEvents: "none",
                   }}
                 >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={statusData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={true}
-                        label={({ name, percent }) =>
-                          `${name}: ${(percent * 100).toFixed(0)}%`
-                        }
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                        activeShape={false}
-                      >
-                        {statusData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => [`${value}张`, "数量"]} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  {statusData.some((item) => item.value > 0) ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={statusData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={true}
+                          label={({ name, percent }) =>
+                            `${name}: ${(percent * 100).toFixed(0)}%`
+                          }
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                          activeShape={false}
+                        >
+                          {statusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value) => [`${value}张`, "数量"]}
+                        />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <NoDataMessage message="暂无卡片状态数据" />
+                  )}
                 </Box>
               </CardContent>
             </Card>
@@ -277,24 +288,28 @@ function CardMemoStatistic() {
                   过去7天每日复习卡片数量
                 </Typography>
                 <Box sx={{ height: 300 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={reviewData}
-                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar
-                        dataKey="reviewed"
-                        name="已复习"
-                        fill="#82ca9d"
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {reviewData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={reviewData}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar
+                          dataKey="reviewed"
+                          name="已复习"
+                          fill="#82ca9d"
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <NoDataMessage message="暂无复习记录数据" />
+                  )}
                 </Box>
               </CardContent>
             </Card>
