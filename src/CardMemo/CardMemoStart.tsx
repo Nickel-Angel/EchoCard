@@ -85,6 +85,8 @@ function CardMemoStart({
 
           <Typography variant="subtitle1" align="center" sx={{ mt: 3 }}>
             今天共有 <b>{totalCards}</b> 张卡片需要学习
+            <br />
+            （点击空白处退出）
           </Typography>
         </Box>
       </CardContent>
