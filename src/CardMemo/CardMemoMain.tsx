@@ -11,24 +11,7 @@ import { useState } from "react";
 import CardMemoStart from "./CardMemoStart";
 import Box from "@mui/material/Box";
 import { NavigateFunction, useNavigate } from "react-router-dom";
-
-interface DeckData {
-  deckId: number;
-  name: string;
-  tolearn: number;
-  learning: number;
-  toreview: number;
-}
-
-function createDeckData(
-  deckId: number,
-  name: string,
-  tolearn: number,
-  learning: number,
-  toreview: number
-): DeckData {
-  return { deckId, name, tolearn, learning, toreview };
-}
+import { DeckData, createDeckData } from "./CardMemoUtils";
 
 interface DenseTableProps {
   rows: DeckData[];
@@ -54,13 +37,13 @@ const DenseTable = ({ rows, navigate }: DenseTableProps) => {
   };
 
   const handleStartStudy = () => {
-    console.log(`开始学习牌组: ${selectedDeck?.name}`);
+    console.log(`开始学习牌组: ${selectedDeck?.deckName}`);
     setOpen(false);
     if (selectedDeck) {
       navigate("/card-memo-learning", {
         state: {
           deckId: selectedDeck.deckId,
-          deckName: selectedDeck.name,
+          deckName: selectedDeck.deckName,
           tolearn: selectedDeck.tolearn,
           learning: selectedDeck.learning,
           toreview: selectedDeck.toreview,
@@ -84,12 +67,12 @@ const DenseTable = ({ rows, navigate }: DenseTableProps) => {
           <TableBody>
             {rows.map((row: DeckData) => (
               <TableRow
-                key={row.name}
+                key={row.deckName}
                 sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
               >
                 <TableCell component="th" scope="row">
                   <TextButton onClick={() => handleOpen(row)}>
-                    {row.name}
+                    {row.deckName}
                   </TextButton>
                 </TableCell>
                 <TableCell align="center">{row.tolearn}</TableCell>
@@ -123,7 +106,7 @@ const DenseTable = ({ rows, navigate }: DenseTableProps) => {
         >
           {selectedDeck && (
             <CardMemoStart
-              deckName={selectedDeck.name}
+              deckName={selectedDeck.deckName}
               tolearn={selectedDeck.tolearn}
               learning={selectedDeck.learning}
               toreview={selectedDeck.toreview}

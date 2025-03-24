@@ -1,18 +1,13 @@
 import { useEffect, useState } from "react";
 import CardMemoText from "./CardMemoText";
 import { useLocation, useNavigate } from "react-router-dom";
+import { createDeckData } from "./CardMemoUtils";
 
 function CardMemoLearning() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [deckData, setDeckData] = useState({
-    deckId: 0,
-    deckName: "",
-    tolearn: 0,
-    learning: 0,
-    toreview: 0,
-  });
+  const [deckData, setDeckData] = useState(createDeckData(0, "", 0, 0, 0));
 
   const [idx, setIdx] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
