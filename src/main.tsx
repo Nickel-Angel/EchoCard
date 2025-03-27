@@ -6,6 +6,7 @@ import "./main.css";
 import CardMemoLearning from "./CardMemo/CardMemoLearning";
 import CardMemoEnd from "./CardMemo/CardMemoEnd";
 import CardMemoStatistic from "./CardMemo/CardMemoStatistic";
+import TemplateAdd from "./CardEdit/TemplateAdd";
 
 // router
 const router = createBrowserRouter([
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
   {
     path: "/card-memo-statistic",
     element: <CardMemoStatistic />,
+  },
+  {
+    path: "/template-add",
+    element: <TemplateAdd />,
   },
 ]);
 
