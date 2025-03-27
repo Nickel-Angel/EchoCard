@@ -2,12 +2,15 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
+import Select from "@mui/material/Select";
+import { SelectChangeEvent } from "@mui/material";
 import MenuItem from "@mui/material/MenuItem";
 import Checkbox from "@mui/material/Checkbox";
 import ListItemText from "@mui/material/ListItemText";
 import Chip from "@mui/material/Chip";
 import OutlinedInput from "@mui/material/OutlinedInput";
+import Button from "@mui/material/Button";
+import { useNavigate } from "react-router-dom";
 
 // 定义牌组数据接口
 export interface DeckOption {
@@ -52,6 +55,8 @@ function CardEditHeader({
   filterOptions,
   onFilterChange,
 }: CardEditHeaderProps) {
+  const navigate = useNavigate();
+
   // 处理牌组选择变化
   const handleDeckChange = (event: SelectChangeEvent<number[]>) => {
     const value = event.target.value as number[];
@@ -97,6 +102,8 @@ function CardEditHeader({
         卡片编辑
       </Typography>
 
+      <Button onClick={() => navigate("/template-add")}>添加模板</Button>
+
       <Box
         sx={{
           display: "flex",
@@ -115,7 +122,7 @@ function CardEditHeader({
             value={filterOptions.decks}
             onChange={handleDeckChange}
             input={<OutlinedInput label="所属牌组" />}
-            renderValue={(selected) => (
+            renderValue={(selected: number[]) => (
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                 {selected.map((value) => {
                   const deck = deckOptions.find((d) => d.id === value);
