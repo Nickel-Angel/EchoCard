@@ -1,37 +1,118 @@
 use chrono::{DateTime, NaiveDate, Utc};
 use fsrs::MemoryState;
+use serde::{Deserialize, Serialize};
 
+mod memory_state_serde {
+    use super::*;
+    use serde::{Deserializer, Serializer};
+
+    pub fn serialize<S>(state: &Option<MemoryState>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match state {
+            Some(state) => {
+                let data = (state.stability, state.difficulty);
+                data.serialize(serializer)
+            }
+            None => serializer.serialize_none(),
+        }
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<MemoryState>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let data: Option<(f32, f32)> = Option::deserialize(deserializer)?;
+
+        Ok(data.map(|(stability, difficulty)| MemoryState {
+            stability,
+            difficulty,
+        }))
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Card {
-    card_id: u32,
-    deck_id: u32,
-    template_id: u32,
-    template_fields: Vec<String>, // Need to Convert
+    pub card_id: u32,
+    pub deck_id: u32,
+    pub template_id: u32,
+    pub template_fields_content: Vec<String>, // Need to Convert
     // FSRS fields
-    due: DateTime<Utc>,
-    memory_state: Option<MemoryState>,
-    scheduled_days: u32,
-    last_review: Option<DateTime<Utc>>,
+    pub due: DateTime<Utc>,
+    #[serde(with = "memory_state_serde")]
+    pub memory_state: Option<MemoryState>,
+    pub scheduled_days: u32,
+    pub last_review: Option<DateTime<Utc>>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Template {
-    template_id: u32,
-    template_name: String,
-    deck_id: u32,
-    template_fields_name: Vec<String>,
+    pub template_id: u32,
+    pub template_name: String,
+    pub template_fields: Vec<(String, bool)>, // (Field Name, Is Front)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Deck {
-    deck_id: u32,
-    deck_name: String,
+    pub deck_id: u32,
+    pub deck_name: String,
     // Not Table Fields
-    tolearn: u32,
-    learning: u32,
-    reviewing: u32,
-    reviewed: u32,
+    pub tolearn: u32,
+    pub learning: u32,
+    pub reviewing: u32,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Review {
-    card_id: u32,
-    review_date: NaiveDate,
-    rating: u32,
+    pub card_id: u32,
+    pub review_date: NaiveDate,
+    pub rating: u32,
+}
+
+impl Default for Template {
+    fn default() -> Self {
+        Self {
+            template_id: 0,
+            template_name: String::new(),
+            template_fields: Vec::new(),
+        }
+    }
+}
+
+impl Default for Card {
+    fn default() -> Self {
+        Self {
+            card_id: 0,
+            deck_id: 0,
+            template_id: 0,
+            template_fields_content: Vec::new(),
+            due: Utc::now(),
+            memory_state: None,
+            scheduled_days: 0,
+            last_review: None,
+        }
+    }
+}
+
+impl Default for Deck {
+    fn default() -> Self {
+        Self {
+            deck_id: 0,
+            deck_name: String::new(),
+            tolearn: 0,
+            learning: 0,
+            reviewing: 0,
+        }
+    }
+}
+
+impl Default for Review {
+    fn default() -> Self {
+        Self {
+            card_id: 0,
+            review_date: NaiveDate::from_ymd_opt(2023, 1, 1).unwrap(),
+            rating: 0,
+        }
+    }
 }
