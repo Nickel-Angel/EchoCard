@@ -1,31 +1,33 @@
 use crate::models::Card;
 use crate::models::Deck;
 use crate::models::Template;
-use rusqlite::{Connection, Result};
+use chrono::Utc;
+use sqlx::{Result, SqlitePool};
 
 pub fn merge_template_fields(fields: Vec<String>) -> String {
     fields.join("\u{001F}")
 }
 
-pub fn create_card(
-    conn: &Connection,
+pub async fn create_card(
+    pool: &SqlitePool,
     deck_id: i64,
     template_id: i64,
     template_fields: Vec<String>,
 ) -> Result<()> {
     let merged_fields = merge_template_fields(template_fields);
-    let due = chrono::Utc::now().to_rfc3339();
-    conn.execute(
-        "INSERT INTO cards (deck_id, template_id, template_fields, due, stability, difficulty, scheduled_days, last_review) VALUES (?1, ?2, ?3, ?4, NULL, NULL, 0, NULL)",
-        rusqlite::params![deck_id, template_id, merged_fields, due],
-    )?;
+    let due = Utc::now().to_rfc3339();
+
+    sqlx::query!("INSERT INTO cards (deck_id, template_id, template_fields, due, stability, difficulty, scheduled_days, last_review) VALUES (?, ?, ?, ?, NULL, NULL, 0, NULL)",
+        deck_id, template_id, merged_fields, due)
+        .execute(pool)
+        .await?;
 
     Ok(())
 }
 
 // 分页获取卡片
-pub fn get_cards_by_page(
-    conn: &Connection,
+pub async fn get_cards_by_page(
+    pool: &SqlitePool,
     deck_id: u32,
     page: u32,
     page_size: u32,
@@ -40,50 +42,58 @@ pub fn get_cards_by_page(
       WHERE c.deck_id = ?
       ORDER BY c.card_id
       LIMIT ? OFFSET ?
-  ";
+    ";
 
-    let mut stmt = conn.prepare(sql)?;
-    let rows = stmt.query_map([deck_id as i64, page_size as i64, offset as i64], |row| {
-        // 从数据库行中解析数据并构建Card对象
-        let card_id: u32 = row.get(0)?;
-        let deck_id: u32 = row.get(1)?;
-        let template_id: u32 = row.get(2)?;
+    // 使用sqlx查询数据库
+    let rows = sqlx::query_as::<
+        _,
+        (
+            i64,
+            i64,
+            i64,
+            String,
+            String,
+            Option<f32>,
+            Option<f32>,
+            i64,
+            Option<String>,
+        ),
+    >(sql)
+    .bind(deck_id as i64)
+    .bind(page_size as i64)
+    .bind(offset as i64)
+    .fetch_all(pool)
+    .await?;
 
+    let mut cards = Vec::new();
+    for (
+        card_id,
+        deck_id,
+        template_id,
+        template_fields,
+        due_str,
+        stability,
+        difficulty,
+        scheduled_days,
+        last_review_str,
+    ) in rows
+    {
         // 解析模板字段，使用Unicode分隔符分割
-        let template_fields: String = row.get(3)?;
         let template_fields_content = template_fields
             .split('\u{001F}')
             .map(|s| s.to_string())
             .collect();
 
         // 解析日期时间字段
-        let due_str: String = row.get(4)?;
         let due = chrono::DateTime::parse_from_rfc3339(&due_str)
-            .map_err(|_| {
-                rusqlite::Error::InvalidColumnType(
-                    4,
-                    "DateTime".to_string(),
-                    rusqlite::types::Type::Text,
-                )
-            })?
+            .map_err(|_| sqlx::Error::RowNotFound)?
             .with_timezone(&chrono::Utc);
 
-        // 解析可能为NULL的字段
-        let stability: Option<f32> = row.get(5)?;
-        let difficulty: Option<f32> = row.get(6)?;
-        let scheduled_days: u32 = row.get(7)?;
-
-        let last_review_str: Option<String> = row.get(8)?;
+        // 解析可能为NULL的last_review字段
         let last_review = if let Some(lr_str) = last_review_str {
             Some(
                 chrono::DateTime::parse_from_rfc3339(&lr_str)
-                    .map_err(|_| {
-                        rusqlite::Error::InvalidColumnType(
-                            8,
-                            "DateTime".to_string(),
-                            rusqlite::types::Type::Text,
-                        )
-                    })?
+                    .map_err(|_| sqlx::Error::RowNotFound)?
                     .with_timezone(&chrono::Utc),
             )
         } else {
@@ -100,29 +110,24 @@ pub fn get_cards_by_page(
             None
         };
 
-        Ok(Card {
-            card_id,
-            deck_id,
-            template_id,
+        cards.push(Card {
+            card_id: card_id as u32,
+            deck_id: deck_id as u32,
+            template_id: template_id as u32,
             template_fields_content,
             due,
             memory_state,
-            scheduled_days,
+            scheduled_days: scheduled_days as u32,
             last_review,
-        })
-    })?;
-
-    let mut cards = Vec::new();
-    for card_result in rows {
-        cards.push(card_result?);
+        });
     }
 
     Ok(cards)
 }
 
-pub fn get_card_count_learned_today(conn: &Connection) -> Result<u32> {
+pub async fn get_card_count_learned_today(pool: &SqlitePool) -> Result<u32> {
     // 获取今天的日期范围（开始和结束）
-    let today = chrono::Utc::now();
+    let today = Utc::now();
     let today_start = today.date_naive().and_hms_opt(0, 0, 0).unwrap();
     let today_end = today.date_naive().and_hms_opt(23, 59, 59).unwrap();
 
@@ -131,11 +136,10 @@ pub fn get_card_count_learned_today(conn: &Connection) -> Result<u32> {
     let today_end_str = today_end.and_utc().to_rfc3339();
 
     // 查询上次复习时间在今天，且due日期在今天以后的卡片数量
-    let count: i64 = conn.query_row(
-        "SELECT COUNT(*) FROM cards WHERE last_review >= ? AND last_review <= ? AND due > ?",
-        rusqlite::params![&today_start_str, &today_end_str, &today_end_str],
-        |row| row.get(0),
-    )?;
+    let result = sqlx::query!("SELECT COUNT(*) as count FROM cards WHERE last_review >= ? AND last_review <= ? AND due > ?",
+            &today_start_str, &today_end_str, &today_end_str)
+        .fetch_one(pool)
+        .await?;
 
-    Ok(count as u32)
+    Ok(result.count as u32)
 }
