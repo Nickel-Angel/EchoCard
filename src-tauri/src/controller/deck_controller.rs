@@ -1,24 +1,25 @@
 use crate::models::Deck;
-use rusqlite::{Connection, Result};
+use chrono::Utc;
+use sqlx::{Result, SqlitePool};
 
-pub fn get_decks(conn: &Connection) -> Result<Vec<Deck>> {
-    let mut stmt = conn.prepare("SELECT deck_id, name FROM decks")?;
-    let deck_iter = stmt.query_map([], |row| {
-        Ok(Deck {
-            deck_id: row.get(0)?,
-            deck_name: row.get(1)?,
+pub async fn get_decks(pool: &SqlitePool) -> Result<Vec<Deck>> {
+    // 查询所有卡组的基本信息
+    let decks_rows = sqlx::query!("SELECT deck_id, name FROM decks")
+        .fetch_all(pool)
+        .await?;
+
+    let mut decks = Vec::new();
+    for row in decks_rows {
+        let mut deck = Deck {
+            deck_id: row.deck_id as u32,
+            deck_name: row.name.clone(),
             tolearn: 0,
             learning: 0,
             reviewing: 0,
-        })
-    })?;
-
-    let mut decks = Vec::new();
-    for deck_result in deck_iter {
-        let mut deck = deck_result?;
+        };
 
         // 获取今天的日期范围（开始和结束）
-        let today = chrono::Utc::now();
+        let today = Utc::now();
         let today_start = today.date_naive().and_hms_opt(0, 0, 0).unwrap();
         let today_end = today.date_naive().and_hms_opt(23, 59, 59).unwrap();
 
@@ -27,28 +28,27 @@ pub fn get_decks(conn: &Connection) -> Result<Vec<Deck>> {
         let today_end_str = today_end.and_utc().to_rfc3339();
 
         // 统计 tolearn：last_review 为 NULL 的卡片数量
-        let tolearn_count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM cards WHERE deck_id = ? AND last_review IS NULL",
-            [deck.deck_id],
-            |row| row.get(0),
-        )?;
-        deck.tolearn = tolearn_count as u32;
+        let tolearn_result = sqlx::query!(
+            "SELECT COUNT(*) as count FROM cards WHERE deck_id = ? AND last_review IS NULL",
+            deck.deck_id
+        )
+        .fetch_one(pool)
+        .await?;
+        deck.tolearn = tolearn_result.count as u32;
 
         // 统计 learning：last_review 和 due 均在今天的卡片数量
-        let learning_count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM cards WHERE deck_id = ? AND last_review >= ? AND last_review <= ? AND due >= ? AND due <= ?",
-            rusqlite::params![deck.deck_id, &today_start_str, &today_end_str, &today_start_str, &today_end_str],
-            |row| row.get(0),
-        )?;
-        deck.learning = learning_count as u32;
+        let learning_result = sqlx::query!("SELECT COUNT(*) as count FROM cards WHERE deck_id = ? AND last_review >= ? AND last_review <= ? AND due >= ? AND due <= ?", 
+            deck.deck_id, &today_start_str, &today_end_str, &today_start_str, &today_end_str)
+            .fetch_one(pool)
+            .await?;
+        deck.learning = learning_result.count as u32;
 
         // 统计 reviewing：last_review 在今天之前，due 在今天及今天之前的卡片数量
-        let reviewing_count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM cards WHERE deck_id = ? AND last_review < ? AND due <= ?",
-            rusqlite::params![deck.deck_id, &today_start_str, &today_end_str],
-            |row| row.get(0),
-        )?;
-        deck.reviewing = reviewing_count as u32;
+        let reviewing_result = sqlx::query!("SELECT COUNT(*) as count FROM cards WHERE deck_id = ? AND last_review < ? AND due <= ?", 
+            deck.deck_id, &today_start_str, &today_end_str)
+            .fetch_one(pool)
+            .await?;
+        deck.reviewing = reviewing_result.count as u32;
 
         decks.push(deck);
     }
@@ -57,9 +57,13 @@ pub fn get_decks(conn: &Connection) -> Result<Vec<Deck>> {
 }
 
 // 获取卡组中的卡片总数
-pub fn get_card_count_by_deck(conn: &Connection, deck_id: u32) -> Result<u32> {
-    let sql = "SELECT COUNT(*) FROM cards WHERE deck_id = ?";
-    let count: i64 = conn.query_row(sql, [deck_id as i64], |row| row.get(0))?;
+pub async fn get_card_count_by_deck(pool: &SqlitePool, deck_id: u32) -> Result<u32> {
+    let result = sqlx::query!(
+        "SELECT COUNT(*) as count FROM cards WHERE deck_id = ?",
+        deck_id
+    )
+    .fetch_one(pool)
+    .await?;
 
-    Ok(count as u32)
+    Ok(result.count as u32)
 }

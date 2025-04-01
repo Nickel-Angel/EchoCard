@@ -1,49 +1,49 @@
 use crate::models::Template;
-use rusqlite::{Connection, Result};
+use sqlx::{Result, SqlitePool};
 
-pub fn create_template(conn: &Connection) -> Result<()> {
+pub async fn create_template(pool: &SqlitePool) -> Result<()> {
     Ok(())
 }
 
-pub fn parse_template(conn: &Connection, template_id: u32) -> Result<Template> {
+pub async fn parse_template(pool: &SqlitePool, template_id: u32) -> Result<Template> {
     // 首先查询模板基本信息
-    let mut stmt = conn.prepare("SELECT template_id, name FROM templates WHERE template_id = ?")?;
-    let template_result = stmt.query_row([template_id], |row| {
-        Ok(Template {
-            template_id: row.get(0)?,
-            template_name: row.get(1)?,
-            template_fields: Vec::new(),
-        })
-    });
+    let template_row = sqlx::query!(
+        "SELECT template_id, name FROM templates WHERE template_id = ?",
+        template_id
+    )
+    .fetch_optional(pool)
+    .await?;
 
     // 如果找不到模板，返回错误
-    let mut template = match template_result {
-        Ok(template) => template,
-        Err(e) => return Err(e),
+    let template_row = match template_row {
+        Some(row) => row,
+        None => return Err(sqlx::Error::RowNotFound),
+    };
+
+    let mut template = Template {
+        template_id: template_row.template_id as u32,
+        template_name: template_row.name,
+        template_fields: Vec::new(),
     };
 
     // 查询模板的所有字段
-    let mut field_stmt = conn.prepare(
+    let fields = sqlx::query!(
         "SELECT name, is_front FROM template_fields WHERE template_id = ? ORDER BY fields_id",
-    )?;
-
-    let fields_iter = field_stmt.query_map([template_id], |row| {
-        let field_name: String = row.get(0)?;
-        let is_front: bool = row.get(1)?;
-        Ok((field_name, is_front))
-    })?;
+        template_id
+    )
+    .fetch_all(pool)
+    .await?;
 
     // 收集所有字段
-    for field_result in fields_iter {
-        match field_result {
-            Ok(field) => template.template_fields.push(field),
-            Err(e) => return Err(e),
-        }
+    for field in fields {
+        template
+            .template_fields
+            .push((field.name, field.is_front != 0));
     }
 
     // 如果没有找到任何字段，可能是一个异常情况
     if template.template_fields.is_empty() {
-        return Err(rusqlite::Error::QueryReturnedNoRows);
+        return Err(sqlx::Error::RowNotFound);
     }
 
     Ok(template)
