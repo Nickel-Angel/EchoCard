@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+
+use crate::models::Card;
 use crate::models::Template;
 use sqlx::{Result, SqlitePool};
 
@@ -36,9 +39,7 @@ pub async fn parse_template(pool: &SqlitePool, template_id: u32) -> Result<Templ
 
     // 收集所有字段
     for field in fields {
-        template
-            .template_fields
-            .push((field.name, field.is_front != 0));
+        template.template_fields.push((field.name, field.is_front));
     }
 
     // 如果没有找到任何字段，可能是一个异常情况
