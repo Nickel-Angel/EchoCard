@@ -1,5 +1,10 @@
+use std::collections::HashMap;
+
+use crate::models::Card;
 use crate::models::Template;
+use crate::SafeHashMap;
 use sqlx::{Result, SqlitePool};
+use std::sync::MutexGuard;
 
 pub async fn create_template(pool: &SqlitePool) -> Result<()> {
     Ok(())
@@ -36,9 +41,7 @@ pub async fn parse_template(pool: &SqlitePool, template_id: u32) -> Result<Templ
 
     // 收集所有字段
     for field in fields {
-        template
-            .template_fields
-            .push((field.name, field.is_front != 0));
+        template.template_fields.push((field.name, field.is_front));
     }
 
     // 如果没有找到任何字段，可能是一个异常情况
@@ -47,4 +50,24 @@ pub async fn parse_template(pool: &SqlitePool, template_id: u32) -> Result<Templ
     }
 
     Ok(template)
+}
+
+pub async fn load_template(
+    pool: &SqlitePool,
+    cards: &Vec<Card>,
+    loaded_template: &mut HashMap<u32, Template>,
+) {
+    for card in cards {
+        if loaded_template.contains_key(&card.template_id) {
+            continue;
+        }
+        let template = match parse_template(pool, card.template_id).await {
+            Ok(template) => template,
+            Err(e) => {
+                println!("Error loading template: {}", e);
+                continue;
+            }
+        };
+        loaded_template.insert(card.template_id, template);
+    }
 }

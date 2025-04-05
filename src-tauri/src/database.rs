@@ -14,7 +14,8 @@ pub async fn initialize_database() -> Result<SqlitePool> {
         .strip_prefix("sqlite:///")
         .expect("DATABASE_URL must start with sqlite:///");
     let db_file_path = PathBuf::from(db_path);
-    let db_dir = db_file_path.parent().unwrap_or(&PathBuf::from("."));
+    let current_path = PathBuf::from(".");
+    let db_dir = db_file_path.parent().unwrap_or(&current_path);
 
     // 创建数据库目录
     if let Err(e) = fs::create_dir_all(db_dir) {
