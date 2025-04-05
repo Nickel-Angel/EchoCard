@@ -46,7 +46,7 @@ pub struct Card {
     pub last_review: Option<DateTime<Utc>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Template {
     pub template_id: u32,
     pub template_name: String,
