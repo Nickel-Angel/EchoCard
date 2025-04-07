@@ -8,11 +8,11 @@ import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import { Modal } from "@mui/material";
 import styled from "@mui/material/styles/styled";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CardMemoStart from "./CardMemoStart";
 import Box from "@mui/material/Box";
 import { NavigateFunction, useNavigate } from "react-router-dom";
-import { DeckData, createDeckData } from "./CardMemoUtils";
+import { DeckData, fetchDecks, fetchLearningCount } from "./CardMemoUtils";
 
 interface DenseTableProps {
   rows: DeckData[];
@@ -122,17 +122,26 @@ const DenseTable = ({ rows, navigate }: DenseTableProps) => {
 
 function CardMemoMain() {
   // TODO: get deck data from back-end
-  const rows: DeckData[] = [
-    createDeckData(1, "Frozen yoghurt", 159, 6, 24),
-    createDeckData(2, "Ice cream sandwich", 237, 9, 37),
-    createDeckData(3, "Eclair", 262, 16, 24),
-    createDeckData(4, "Cupcake", 305, 3, 67),
-    createDeckData(5, "Gingerbread", 356, 16, 49),
-  ];
+  // const rows: DeckData[] = [
+  //   createDeckData(1, "Frozen yoghurt", 159, 6, 24),
+  //   createDeckData(2, "Ice cream sandwich", 237, 9, 37),
+  //   createDeckData(3, "Eclair", 262, 16, 24),
+  //   createDeckData(4, "Cupcake", 305, 3, 67),
+  //   createDeckData(5, "Gingerbread", 356, 16, 49),
+  // ];
   // TODO: get learning time and learning number from back-end
-  const learningTime = 0;
+  // const learningTime = 0;
+  const [rows, setRows] = useState<DeckData[]>([]);
+  const [learningTime, setLearningTime] = useState(0);
   const learningNumber = 0;
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // 获取牌组信息
+    fetchDecks(setRows);
+    // 获取今日学习卡片数量
+    fetchLearningCount(setLearningTime);
+  }, []);
 
   if (rows.length !== 0) {
     return (
