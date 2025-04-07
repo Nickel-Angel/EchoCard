@@ -1,18 +1,15 @@
 use sqlx::{sqlite::SqlitePool, Result};
-use std::env;
 use std::fs;
 use std::io::ErrorKind;
 use std::path::PathBuf;
 
-pub async fn initialize_database() -> Result<SqlitePool> {
-    // 从环境变量获取数据库URL
-    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env file");
+pub async fn initialize_database(db_url: &str) -> Result<SqlitePool> {
     println!("数据库连接URL: {}", db_url);
 
     // 从URL中提取数据库文件路径
     let db_path = db_url
-        .strip_prefix("sqlite:///")
-        .expect("DATABASE_URL must start with sqlite:///");
+        .strip_prefix("sqlite://")
+        .expect("DATABASE_URL must start with sqlite://");
     let db_file_path = PathBuf::from(db_path);
     let current_path = PathBuf::from(".");
     let db_dir = db_file_path.parent().unwrap_or(&current_path);

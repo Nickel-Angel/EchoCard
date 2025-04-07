@@ -32,7 +32,8 @@
       "icons/icon.ico"
     ],
     "resources": [
-      "db/*"
+      "db/*",
+      "conf.json"
     ]
   }
 }
