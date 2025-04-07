@@ -1,5 +1,5 @@
 use crate::models::Card;
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use sqlx::{Result, SqlitePool};
 
 pub fn merge_template_fields(fields: Vec<String>) -> String {
@@ -155,4 +155,40 @@ pub async fn get_card_count_learned_today(pool: &SqlitePool) -> Result<u32> {
     .await?;
 
     Ok(result.count as u32)
+}
+
+pub async fn update_card_state(
+    pool: &SqlitePool,
+    card_id: u32,
+    memory_state: Option<fsrs::MemoryState>,
+    scheduled_days: u32,
+    last_review: Option<DateTime<Utc>>,
+    due: DateTime<Utc>,
+) -> Result<()> {
+    // 转换 memory_state 为数据库字段
+    let (stability, difficulty) = if let Some(state) = memory_state {
+        (Some(state.stability), Some(state.difficulty))
+    } else {
+        (None, None)
+    };
+
+    sqlx::query!(
+        "UPDATE cards 
+        SET stability = ?, 
+            difficulty = ?, 
+            scheduled_days = ?,
+            last_review = ?,
+            due = ?
+        WHERE card_id = ?",
+        stability,
+        difficulty,
+        scheduled_days,
+        last_review,
+        due,
+        card_id
+    )
+    .execute(pool)
+    .await?;
+
+    Ok(())
 }
