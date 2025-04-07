@@ -8,14 +8,14 @@ pub fn merge_template_fields(fields: Vec<String>) -> String {
 
 pub async fn create_card(
     pool: &SqlitePool,
-    deck_id: i64,
-    template_id: i64,
+    deck_id: u32,
+    template_id: u32,
     template_fields: Vec<String>,
-) -> Result<()> {
+) -> Result<u32> {
     let merged_fields = merge_template_fields(template_fields);
-    let due = Utc::now().to_rfc3339();
+    let due = Utc::now();
 
-    sqlx::query!(
+    let card_id = sqlx::query!(
         "INSERT INTO cards 
         (deck_id, template_id, template_fields, due, 
         stability, difficulty, scheduled_days, last_review) 
@@ -23,12 +23,13 @@ pub async fn create_card(
         deck_id,
         template_id,
         merged_fields,
-        due
+        due,
     )
     .execute(pool)
-    .await?;
+    .await?
+    .last_insert_rowid() as u32;
 
-    Ok(())
+    Ok(card_id)
 }
 
 // 分页获取卡片
