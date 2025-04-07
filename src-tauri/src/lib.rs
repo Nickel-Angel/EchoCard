@@ -7,7 +7,7 @@ use std::{collections::HashMap, fs};
 use commands::cardmemo::{
     card_count_learned_today, decks_display, emit_card_review, get_loaded_template, get_next_card,
 };
-use database::initialize_database;
+use database::{initialize_database, initialize_decks};
 use models::Template;
 use serde::{Deserialize, Serialize};
 use sqlx::sqlite::SqlitePool;
@@ -51,6 +51,16 @@ pub fn run() {
                     }
                 }
             });
+
+            runtime.block_on(async {
+                match initialize_decks(&pool).await {
+                    Ok(_) => (),
+                    Err(e) => {
+                        println!("decks init error: {}", e.to_string());
+                        panic!("decks init error");
+                    }
+                }
+            }); // 初始化decks
 
             app.manage(AppState {
                 pool,

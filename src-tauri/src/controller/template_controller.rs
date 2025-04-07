@@ -1,11 +1,38 @@
-use std::collections::HashMap;
-
-use crate::models::Card;
 use crate::models::Template;
 use sqlx::{Result, SqlitePool};
 
-pub async fn create_template(pool: &SqlitePool) -> Result<()> {
-    Ok(())
+pub async fn create_template(pool: &SqlitePool, template: &Template) -> Result<u32> {
+    // 开启事务
+    let mut tx = pool.begin().await?;
+
+    // 插入模板基本信息
+    let template_id = sqlx::query!(
+        "INSERT INTO templates (name) VALUES (?)",
+        template.template_name
+    )
+    .execute(&mut *tx)
+    .await?
+    .last_insert_rowid() as u32;
+
+    // 插入模板字段
+    for (index, (field_name, is_front)) in template.template_fields.iter().enumerate() {
+        let idx = index as u32;
+        sqlx::query!(
+            "INSERT INTO template_fields (fields_id, template_id, name, is_front) 
+            VALUES (?, ?, ?, ?)",
+            idx,
+            template_id,
+            field_name,
+            is_front
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
+
+    // 提交事务
+    tx.commit().await?;
+
+    Ok(template_id)
 }
 
 pub async fn parse_template(pool: &SqlitePool, template_id: u32) -> Result<Template> {

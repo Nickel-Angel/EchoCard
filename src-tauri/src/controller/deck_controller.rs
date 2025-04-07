@@ -2,6 +2,14 @@ use crate::models::Deck;
 use chrono::Utc;
 use sqlx::{Result, SqlitePool};
 
+pub async fn create_deck(pool: &SqlitePool, deck_name: &str) -> Result<u32> {
+    let deck_id = sqlx::query!("INSERT INTO decks (name) VALUES (?)", deck_name)
+        .execute(pool)
+        .await?
+        .last_insert_rowid() as u32;
+    Ok(deck_id)
+}
+
 pub async fn get_decks(pool: &SqlitePool) -> Result<Vec<Deck>> {
     // 查询所有卡组的基本信息
     let decks_rows = sqlx::query!("SELECT deck_id, name FROM decks")
