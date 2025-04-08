@@ -6,9 +6,11 @@ use std::{collections::HashMap, fs};
 
 use commands::cardmemo::{
     card_count_learned_today, decks_display, emit_card_review, get_loaded_template, get_next_card,
+    load_next_state,
 };
 use database::{initialize_database, initialize_decks};
-use models::Template;
+use fsrs::NextStates;
+use models::{Card, Template};
 use serde::{Deserialize, Serialize};
 use sqlx::sqlite::SqlitePool;
 use tauri::path::BaseDirectory;
@@ -21,6 +23,8 @@ pub type SafeHashMap<T, E> = Arc<Mutex<HashMap<T, E>>>;
 pub struct AppState {
     pool: SqlitePool,
     loaded_template: SafeHashMap<u32, Template>,
+    loaded_card: Arc<Mutex<Option<Card>>>,
+    loaded_next_states: Arc<Mutex<Option<NextStates>>>,
     fsrs_params: [f32; 19],
     desired_retention: f32,
 }
@@ -65,6 +69,8 @@ pub fn run() {
             app.manage(AppState {
                 pool,
                 loaded_template: Arc::new(Mutex::new(HashMap::new())),
+                loaded_card: Arc::new(Mutex::new(None)),
+                loaded_next_states: Arc::new(Mutex::new(None)),
                 fsrs_params: config.fsrs_params,
                 desired_retention: config.desired_retention,
             });
@@ -106,6 +112,7 @@ pub fn run() {
             get_next_card,
             get_loaded_template,
             emit_card_review,
+            load_next_state,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

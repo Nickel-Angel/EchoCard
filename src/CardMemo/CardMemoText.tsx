@@ -5,17 +5,20 @@ import CardActions from "@mui/material/CardActions";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
+import { NextIntervals } from "./CardMemoUtils";
 
 interface CardMemoTextProps {
   frontContent: string;
   backContent: string;
   handleRating?: (rating: number) => void;
+  nextIntervals?: NextIntervals | null;
 }
 
 function CardMemoText({
   frontContent,
   backContent,
   handleRating = () => {},
+  nextIntervals = null,
 }: CardMemoTextProps) {
   const [showBack, setShowBack] = useState(false);
 
@@ -47,7 +50,7 @@ function CardMemoText({
               onClick={() => handleRating(1)}
               sx={{ flex: 1, mx: 0.5 }}
             >
-              忘记
+              忘记 {nextIntervals?.again ? `(${nextIntervals.again} 天)` : ""}
             </Button>
             <Button
               variant="contained"
@@ -55,7 +58,7 @@ function CardMemoText({
               onClick={() => handleRating(2)}
               sx={{ flex: 1, mx: 0.5 }}
             >
-              困难
+              困难 {nextIntervals?.hard ? `(${nextIntervals.hard} 天)` : ""}
             </Button>
             <Button
               variant="contained"
@@ -63,7 +66,7 @@ function CardMemoText({
               onClick={() => handleRating(3)}
               sx={{ flex: 1, mx: 0.5 }}
             >
-              良好
+              良好 {nextIntervals?.good ? `(${nextIntervals.good} 天)` : ""}
             </Button>
             <Button
               variant="contained"
@@ -71,7 +74,7 @@ function CardMemoText({
               onClick={() => handleRating(4)}
               sx={{ flex: 1, mx: 0.5 }}
             >
-              简单
+              简单 {nextIntervals?.easy ? `(${nextIntervals.easy} 天)` : ""}
             </Button>
           </Box>
         ) : (
