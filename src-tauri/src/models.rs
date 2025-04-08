@@ -32,7 +32,7 @@ mod memory_state_serde {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Card {
     pub card_id: u32,
     pub deck_id: u32,
