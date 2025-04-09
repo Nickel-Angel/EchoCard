@@ -132,15 +132,14 @@ function CardMemoMain() {
   // TODO: get learning time and learning number from back-end
   // const learningTime = 0;
   const [rows, setRows] = useState<DeckData[]>([]);
-  const [learningTime, setLearningTime] = useState(0);
-  const learningNumber = 0;
+  const [learningNumber, setLearningNumber] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
     // 获取牌组信息
     fetchDecks(setRows);
     // 获取今日学习卡片数量
-    fetchLearningCount(setLearningTime);
+    fetchLearningCount(setLearningNumber);
   }, []);
 
   if (rows.length !== 0) {
@@ -155,9 +154,7 @@ function CardMemoMain() {
             gap: "10px",
           }}
         >
-          <p>
-            今天共学习了 {learningTime} 分钟，学习了 {learningNumber} 张卡片。
-          </p>
+          <p>今天共学习了 {learningNumber} 张卡片。</p>
           <Button
             variant="outlined"
             size="small"
