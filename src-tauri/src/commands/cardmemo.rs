@@ -135,7 +135,7 @@ pub async fn emit_card_review(
     let memory_state = Some(next_state.memory.clone());
     let scheduled_days = interval;
     let last_review = Some(Utc::now());
-    let due = card.last_review.unwrap() + Duration::days(interval as i64);
+    let due = card.last_review.unwrap_or(last_review.unwrap()) + Duration::days(interval as i64);
 
     update_card_state(
         &state.pool,
