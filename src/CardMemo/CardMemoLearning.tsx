@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import CardMemoText from "./CardMemoText";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   createDeckData,
@@ -11,6 +10,8 @@ import {
   TemplateData,
   NextIntervals,
 } from "./CardMemoUtils";
+import { TemplateFactory } from "./templates/TemplateFactory";
+import { TemplateInterface } from "./templates/TemplateInterface";
 
 function CardMemoLearning() {
   const location = useLocation();
@@ -24,20 +25,69 @@ function CardMemoLearning() {
   // 卡片缓存和当前卡片状态
   const [cardCache, setCardCache] = useState<CardData[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [currentTemplate, setCurrentTemplate] = useState<TemplateData | null>(
-    null
-  );
+  const [_, setCurrentTemplate] = useState<TemplateData | null>(null);
   const [nextIntervals, setNextIntervals] = useState<NextIntervals | null>(
     null
   );
-  const [isLoading, setIsLoading] = useState(false);
+  const [__, setIsLoading] = useState(false);
 
-  const [currentCard, setCurrentCard] = useState({
-    front: "",
-    back: "",
-  });
+  // 当前使用的模板实例
+  const [templateInstance, setTemplateInstance] =
+    useState<TemplateInterface | null>(null);
 
-  // 函数已移至CardMemoUtils.tsx
+  // 解析后的卡片内容
+  const [parsedCardContent, setParsedCardContent] = useState<any>(null);
+
+  const processCurrentCard = async () => {
+    // 如果没有卡片或已经学习完所有卡片
+    if (cardCache.length === 0) {
+      return;
+    }
+
+    // 如果当前索引超出缓存范围，尝试加载更多卡片
+    if (currentCardIndex >= cardCache.length) {
+      const hasMoreCards = await loadCardsFromBackend(
+        deckData.deckId,
+        10,
+        setCardCache,
+        setCurrentCardIndex,
+        setIsLoading
+      );
+      if (!hasMoreCards) {
+        // 没有更多卡片，结束学习
+        const endTime = Date.now();
+        const totalStudyTime = endTime - startTime;
+
+        navigate("/card-memo-end", {
+          state: {
+            deckName: deckData.deckName,
+            totalCards:
+              deckData.toreview + deckData.learning + deckData.tolearn,
+            correctCount: correctCount,
+            studyTime: totalStudyTime,
+          },
+        });
+        return;
+      }
+    }
+
+    // 获取当前卡片
+    const card = cardCache[currentCardIndex];
+
+    // 加载模板和下一状态
+    const template = await loadTemplate(card.template_id, setCurrentTemplate);
+    await loadNextState(card, setNextIntervals);
+
+    if (template) {
+      // 使用模板工厂创建对应的模板实例
+      const instance = TemplateFactory.createTemplate(template);
+      setTemplateInstance(instance);
+
+      // 使用模板实例解析卡片内容
+      const content = instance.parseCardContent(card, template);
+      setParsedCardContent(content);
+    }
+  };
 
   // first render
   useEffect(() => {
@@ -78,69 +128,6 @@ function CardMemoLearning() {
 
   // 处理卡片缓存和当前卡片索引变化
   useEffect(() => {
-    const processCurrentCard = async () => {
-      // 如果没有卡片或已经学习完所有卡片
-      if (cardCache.length === 0) {
-        return;
-      }
-
-      // 如果当前索引超出缓存范围，尝试加载更多卡片
-      if (currentCardIndex >= cardCache.length) {
-        const hasMoreCards = await loadCardsFromBackend(
-          deckData.deckId,
-          10,
-          setCardCache,
-          setCurrentCardIndex,
-          setIsLoading
-        );
-        if (!hasMoreCards) {
-          // 没有更多卡片，结束学习
-          const endTime = Date.now();
-          const totalStudyTime = endTime - startTime;
-
-          navigate("/card-memo-end", {
-            state: {
-              deckName: deckData.deckName,
-              totalCards:
-                deckData.toreview + deckData.learning + deckData.tolearn,
-              correctCount: correctCount,
-              studyTime: totalStudyTime,
-            },
-          });
-          return;
-        }
-      }
-
-      // 获取当前卡片
-      const card = cardCache[currentCardIndex];
-
-      // 加载模板和下一状态
-      const template = await loadTemplate(card.template_id, setCurrentTemplate);
-      await loadNextState(card, setNextIntervals);
-
-      if (template) {
-        // 根据模板构建卡片内容
-        const frontFields = template.template_fields
-          .filter((field) => field[1]) // 筛选前面字段
-          .map((field) => {
-            const fieldIndex = template.template_fields.findIndex(
-              (f) => f[0] === field[0]
-            );
-            return fieldIndex >= 0 &&
-              fieldIndex < card.template_fields_content.length
-              ? card.template_fields_content[fieldIndex]
-              : "";
-          });
-
-        const backFields = card.template_fields_content;
-
-        setCurrentCard({
-          front: frontFields.join("\n"),
-          back: backFields.join("\n"),
-        });
-      }
-    };
-
     processCurrentCard();
   }, [cardCache, currentCardIndex]);
 
@@ -150,22 +137,28 @@ function CardMemoLearning() {
     // 提交评分到后端
     await submitCardRating(rating);
 
-    if (rating > 1) {
-      setCorrectCount(correctCount + 1);
-    }
-
     // 移动到下一张卡片
     setCurrentCardIndex(currentCardIndex + 1);
   };
 
+  // 正确答案的回调函数
+  const emitCorrect = () => {
+    setCorrectCount(correctCount + 1);
+  };
+
   return (
     <div>
-      <CardMemoText
-        frontContent={currentCard.front}
-        backContent={currentCard.back}
-        handleRating={handleCardRating}
-        nextIntervals={nextIntervals}
-      />
+      {templateInstance && parsedCardContent ? (
+        // 使用模板实例渲染卡片
+        templateInstance.renderCard({
+          cardContent: parsedCardContent,
+          handleRating: handleCardRating,
+          emitCorrect,
+          nextIntervals,
+        })
+      ) : (
+        <div>加载中...</div>
+      )}
     </div>
   );
 }

@@ -78,7 +78,8 @@ function CardMemoEnd() {
                 学习用时
               </Typography>
               <Typography variant="h4" color="primary">
-                {Math.floor(studyTime / 60)}分{studyTime % 60}秒
+                {Math.floor(studyTime / 6000)}分
+                {Math.floor(studyTime / 1000) % 60}秒
               </Typography>
             </Paper>
           </Grid>
