@@ -90,3 +90,35 @@ pub async fn get_card_count_by_deck(pool: &SqlitePool, deck_id: u32) -> Result<u
 
     Ok(result.count as u32)
 }
+
+pub async fn delete_deck_by_id(pool: &SqlitePool, deck_id: u32) -> Result<()> {
+    // 开启事务
+    let mut tx = pool.begin().await?;
+
+    // 1. 首先获取该牌组下所有卡片的ID
+    let cards = sqlx::query!("SELECT card_id FROM cards WHERE deck_id = ?", deck_id)
+        .fetch_all(&mut *tx)
+        .await?;
+
+    // 2. 删除这些卡片的所有复习记录
+    for card in &cards {
+        sqlx::query!("DELETE FROM reviews WHERE card_id = ?", card.card_id)
+            .execute(&mut *tx)
+            .await?;
+    }
+
+    // 3. 删除牌组中的所有卡片
+    sqlx::query!("DELETE FROM cards WHERE deck_id = ?", deck_id)
+        .execute(&mut *tx)
+        .await?;
+
+    // 4. 最后删除牌组本身
+    sqlx::query!("DELETE FROM decks WHERE deck_id = ?", deck_id)
+        .execute(&mut *tx)
+        .await?;
+
+    // 提交事务
+    tx.commit().await?;
+
+    Ok(())
+}
