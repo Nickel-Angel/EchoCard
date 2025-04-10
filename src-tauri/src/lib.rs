@@ -5,8 +5,8 @@ mod models;
 use std::{collections::HashMap, fs};
 
 use commands::cardmemo::{
-    card_count_learned_today, decks_display, emit_card_review, get_loaded_template, get_next_card,
-    load_next_state,
+    card_count_learned_today, decks_display, delete_deck, emit_card_review, get_loaded_template,
+    get_next_card, load_next_state,
 };
 use database::{initialize_database, initialize_decks};
 use fsrs::NextStates;
@@ -113,6 +113,7 @@ pub fn run() {
             get_loaded_template,
             emit_card_review,
             load_next_state,
+            delete_deck,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

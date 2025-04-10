@@ -72,26 +72,50 @@ pub async fn initialize_decks(pool: &SqlitePool) -> Result<()> {
     // 创建示例卡组
     let deck_id = create_deck(pool, "示例卡组").await?;
 
-    // 创建选择题模板
-    let template = Template {
-        template_id: 0,
-        template_name: "选择题卡片".to_string(),
-        template_fields: vec![
-            ("问题".to_string(), true),
-            ("选项".to_string(), true),
-            ("答案".to_string(), false),
-            ("解析".to_string(), false),
-        ],
+    // 创建或获取选择题模板
+    let choice_template_name = "选择题卡片";
+    let choice_template_id = match crate::controller::template_controller::get_template_by_name(
+        pool,
+        choice_template_name,
+    )
+    .await?
+    {
+        Some(template) => template.template_id,
+        None => {
+            // 模板不存在，创建新模板
+            let template = Template {
+                template_id: 0,
+                template_name: choice_template_name.to_string(),
+                template_fields: vec![
+                    ("问题".to_string(), true),
+                    ("选项".to_string(), true),
+                    ("答案".to_string(), false),
+                    ("解析".to_string(), false),
+                ],
+            };
+            create_template(pool, &template).await?
+        }
     };
-    let choice_template_id = create_template(pool, &template).await?;
 
-    // 创建普通卡片模板
-    let template = Template {
-        template_id: 0,
-        template_name: "正反面卡片".to_string(),
-        template_fields: vec![("正面".to_string(), true), ("反面".to_string(), false)],
+    // 创建或获取普通卡片模板
+    let basic_template_name = "正反面卡片";
+    let basic_template_id = match crate::controller::template_controller::get_template_by_name(
+        pool,
+        basic_template_name,
+    )
+    .await?
+    {
+        Some(template) => template.template_id,
+        None => {
+            // 模板不存在，创建新模板
+            let template = Template {
+                template_id: 0,
+                template_name: basic_template_name.to_string(),
+                template_fields: vec![("正面".to_string(), true), ("反面".to_string(), false)],
+            };
+            create_template(pool, &template).await?
+        }
     };
-    let basic_template_id = create_template(pool, &template).await?;
 
     // 创建示例选择题卡片
     let choice_card_fields = vec![

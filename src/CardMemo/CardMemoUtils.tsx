@@ -179,3 +179,19 @@ export async function submitCardRating(rating: number) {
     return false;
   }
 }
+
+/**
+ * 删除卡组
+ * @param deckId - 要删除的卡组ID
+ * @returns Promise<boolean> - 返回是否成功删除卡组，true表示成功，false表示失败
+ * @description 调用后端的delete_deck命令删除指定ID的卡组
+ */
+export async function deleteDeck(deckId: number) {
+  try {
+    await invoke("delete_deck", { deckId });
+    return true;
+  } catch (error) {
+    console.error("删除卡组失败:", error);
+    return false;
+  }
+}

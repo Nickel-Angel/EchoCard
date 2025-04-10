@@ -6,17 +6,32 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
-import { Modal } from "@mui/material";
+import {
+  Modal,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from "@mui/material";
 import styled from "@mui/material/styles/styled";
 import { useState, useEffect } from "react";
 import CardMemoStart from "./CardMemoStart";
 import Box from "@mui/material/Box";
 import { NavigateFunction, useNavigate } from "react-router-dom";
-import { DeckData, fetchDecks, fetchLearningCount } from "./CardMemoUtils";
+import {
+  DeckData,
+  fetchDecks,
+  fetchLearningCount,
+  deleteDeck,
+} from "./CardMemoUtils";
+import IconButton from "@mui/material/IconButton";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 interface DenseTableProps {
   rows: DeckData[];
   navigate: NavigateFunction;
+  refreshDecks: () => void;
 }
 
 const TextButton = styled(Button)({
@@ -24,9 +39,11 @@ const TextButton = styled(Button)({
   justifyContent: "flex-start",
 });
 
-const DenseTable = ({ rows, navigate }: DenseTableProps) => {
+const DenseTable = ({ rows, navigate, refreshDecks }: DenseTableProps) => {
   const [open, setOpen] = useState(false);
   const [selectedDeck, setSelectedDeck] = useState<DeckData | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deckToDelete, setDeckToDelete] = useState<DeckData | null>(null);
 
   const handleOpen = (deck: DeckData) => {
     setSelectedDeck(deck);
@@ -53,6 +70,28 @@ const DenseTable = ({ rows, navigate }: DenseTableProps) => {
     }
   };
 
+  const handleDeleteClick = (event: React.MouseEvent, deck: DeckData) => {
+    event.stopPropagation();
+    setDeckToDelete(deck);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setDeckToDelete(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (deckToDelete) {
+      const success = await deleteDeck(deckToDelete.deckId);
+      if (success) {
+        refreshDecks();
+      }
+    }
+    setDeleteDialogOpen(false);
+    setDeckToDelete(null);
+  };
+
   return (
     <>
       <TableContainer component={Paper}>
@@ -63,6 +102,7 @@ const DenseTable = ({ rows, navigate }: DenseTableProps) => {
               <TableCell align="center">未学习</TableCell>
               <TableCell align="center">学习中</TableCell>
               <TableCell align="center">待复习</TableCell>
+              <TableCell align="center">删除卡组</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -79,6 +119,15 @@ const DenseTable = ({ rows, navigate }: DenseTableProps) => {
                 <TableCell align="center">{row.tolearn}</TableCell>
                 <TableCell align="center">{row.learning}</TableCell>
                 <TableCell align="center">{row.toreview}</TableCell>
+                <TableCell align="center">
+                  <IconButton
+                    aria-label="delete"
+                    size="small"
+                    onClick={(event) => handleDeleteClick(event, row)}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -116,12 +165,32 @@ const DenseTable = ({ rows, navigate }: DenseTableProps) => {
           )}
         </Box>
       </Modal>
+
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"确认删除牌组"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            确定要删除牌组 "{deckToDelete?.deckName}"
+            吗？此操作不可恢复，牌组中的所有卡片将被永久删除。
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>取消</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            删除
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
 
 function CardMemoMain() {
-  // TODO: get deck data from back-end
   // const rows: DeckData[] = [
   //   createDeckData(1, "Frozen yoghurt", 159, 6, 24),
   //   createDeckData(2, "Ice cream sandwich", 237, 9, 37),
@@ -129,23 +198,27 @@ function CardMemoMain() {
   //   createDeckData(4, "Cupcake", 305, 3, 67),
   //   createDeckData(5, "Gingerbread", 356, 16, 49),
   // ];
-  // TODO: get learning time and learning number from back-end
-  // const learningTime = 0;
   const [rows, setRows] = useState<DeckData[]>([]);
   const [learningNumber, setLearningNumber] = useState(0);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // 获取牌组信息
+  const refreshDecks = () => {
     fetchDecks(setRows);
-    // 获取今日学习卡片数量
     fetchLearningCount(setLearningNumber);
+  };
+
+  useEffect(() => {
+    refreshDecks();
   }, []);
 
   if (rows.length !== 0) {
     return (
       <div>
-        <DenseTable navigate={navigate} rows={rows} />
+        <DenseTable
+          navigate={navigate}
+          rows={rows}
+          refreshDecks={refreshDecks}
+        />
         <div
           style={{
             paddingTop: "20px",

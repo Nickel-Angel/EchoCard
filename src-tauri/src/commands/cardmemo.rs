@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::controller::card_controller::{
     get_card_count_learned_today, get_cards_by_page, update_card_state,
 };
-use crate::controller::deck_controller::get_decks;
+use crate::controller::deck_controller::{delete_deck_by_id, get_decks};
 use crate::controller::review_controller::create_review;
 use crate::controller::template_controller::parse_template;
 use crate::models::Card;
@@ -36,6 +36,14 @@ pub async fn card_count_learned_today(state: tauri::State<'_, AppState>) -> Resu
         .await
         .map_err(|e| e.to_string())?;
     Ok(count)
+}
+
+#[tauri::command]
+pub async fn delete_deck(state: tauri::State<'_, AppState>, deck_id: u32) -> Result<(), String> {
+    delete_deck_by_id(&state.pool, deck_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 #[tauri::command]
