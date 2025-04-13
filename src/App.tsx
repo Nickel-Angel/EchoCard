@@ -71,10 +71,10 @@ function App() {
       >
         <Tab
           icon={<ImportContactsOutlinedIcon />}
-          label="牌组记忆"
+          label="卡组记忆"
           {...a11yProps(0)}
         />
-        <Tab icon={<EditOutlinedIcon />} label="牌组编辑" {...a11yProps(1)} />
+        <Tab icon={<EditOutlinedIcon />} label="卡组编辑" {...a11yProps(1)} />
         <Tab icon={<SettingsOutlinedIcon />} label="设置" {...a11yProps(2)} />
       </Tabs>
       <TabPanel value={value} index={0}>

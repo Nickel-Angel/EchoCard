@@ -60,7 +60,7 @@ pub struct Deck {
     // Not Table Fields
     pub tolearn: u32,
     pub learning: u32,
-    pub reviewing: u32,
+    pub toreview: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -102,7 +102,7 @@ impl Default for Deck {
             deck_name: String::new(),
             tolearn: 0,
             learning: 0,
-            reviewing: 0,
+            toreview: 0,
         }
     }
 }

@@ -58,7 +58,7 @@ export async function fetchDecks(
         deck.deck_name,
         deck.tolearn,
         deck.learning,
-        deck.reviewing
+        deck.toreview
       )
     );
     setRows(deckData);

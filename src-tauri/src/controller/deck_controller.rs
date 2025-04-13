@@ -23,7 +23,7 @@ pub async fn get_decks(pool: &SqlitePool) -> Result<Vec<Deck>> {
             deck_name: row.name.clone(),
             tolearn: 0,
             learning: 0,
-            reviewing: 0,
+            toreview: 0,
         };
 
         // 获取今天的日期范围（开始和结束）
@@ -61,8 +61,8 @@ pub async fn get_decks(pool: &SqlitePool) -> Result<Vec<Deck>> {
         .await?;
         deck.learning = learning_result.count as u32;
 
-        // 统计 reviewing：last_review 在今天之前，due 在今天及今天之前的卡片数量
-        let reviewing_result = sqlx::query!(
+        // 统计 toreview：last_review 在今天之前，due 在今天及今天之前的卡片数量
+        let toreview_result = sqlx::query!(
             "SELECT COUNT(*) as count FROM cards 
             WHERE deck_id = ? AND last_review < ? AND due <= ?",
             deck.deck_id,
@@ -71,7 +71,7 @@ pub async fn get_decks(pool: &SqlitePool) -> Result<Vec<Deck>> {
         )
         .fetch_one(pool)
         .await?;
-        deck.reviewing = reviewing_result.count as u32;
+        deck.toreview = toreview_result.count as u32;
 
         decks.push(deck);
     }
