@@ -43,6 +43,43 @@ pub async fn get_template_by_name(
     Ok(Some(template))
 }
 
+pub async fn get_all_templates(pool: &SqlitePool) -> Result<Vec<Template>> {
+    // 查询所有模板基本信息
+    let templates_rows = sqlx::query!("SELECT template_id, name FROM templates",)
+        .fetch_all(pool)
+        .await?;
+
+    let mut templates = Vec::new();
+
+    // 遍历每个模板，获取其字段信息
+    for template_row in templates_rows {
+        let template_id = template_row.template_id as u32;
+        let mut template = Template {
+            template_id,
+            template_name: template_row.name,
+            template_fields: Vec::new(),
+        };
+
+        // 查询模板的所有字段
+        let fields = sqlx::query!(
+            "SELECT name, is_front FROM template_fields WHERE template_id = ? ORDER BY fields_id",
+            template_id
+        )
+        .fetch_all(pool)
+        .await?;
+
+        // 收集所有字段
+        for field in fields {
+            template.template_fields.push((field.name, field.is_front));
+        }
+
+        // 添加到结果列表中
+        templates.push(template);
+    }
+
+    Ok(templates)
+}
+
 pub async fn create_template(pool: &SqlitePool, template: &Template) -> Result<u32> {
     // 开启事务
     let mut tx = pool.begin().await?;
