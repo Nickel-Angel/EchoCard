@@ -7,6 +7,7 @@ import CardActions from "@mui/material/CardActions";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
+import { RatingButtons } from "./RatingButtons";
 
 function TextCard({
   cardContent,
@@ -60,47 +61,10 @@ function TextCard({
       </CardContent>
       <CardActions sx={{ flexDirection: "column", alignItems: "stretch" }}>
         {showBack ? (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              width: "100%",
-              mb: 1,
-            }}
-          >
-            <Button
-              variant="contained"
-              color="error"
-              onClick={() => handleRatingWithCheck(1)}
-              sx={{ flex: 1, mx: 0.5 }}
-            >
-              忘记 {nextIntervals?.again ? `(${nextIntervals.again} 天)` : ""}
-            </Button>
-            <Button
-              variant="contained"
-              color="warning"
-              onClick={() => handleRatingWithCheck(2)}
-              sx={{ flex: 1, mx: 0.5 }}
-            >
-              困难 {nextIntervals?.hard ? `(${nextIntervals.hard} 天)` : ""}
-            </Button>
-            <Button
-              variant="contained"
-              color="info"
-              onClick={() => handleRatingWithCheck(3)}
-              sx={{ flex: 1, mx: 0.5 }}
-            >
-              良好 {nextIntervals?.good ? `(${nextIntervals.good} 天)` : ""}
-            </Button>
-            <Button
-              variant="contained"
-              color="success"
-              onClick={() => handleRatingWithCheck(4)}
-              sx={{ flex: 1, mx: 0.5 }}
-            >
-              简单 {nextIntervals?.easy ? `(${nextIntervals.easy} 天)` : ""}
-            </Button>
-          </Box>
+          <RatingButtons
+            handleRating={handleRatingWithCheck}
+            nextIntervals={nextIntervals}
+          />
         ) : (
           <Button
             variant="contained"

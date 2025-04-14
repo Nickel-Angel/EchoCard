@@ -111,10 +111,10 @@ pub async fn load_next_state(
     let mut loaded_next_states = state.loaded_next_states.lock().unwrap();
     *loaded_next_states = Some(next_states.clone());
     Ok(NextIntervals {
-        again: next_states.again.interval.round().max(1.0) as u32,
-        hard: next_states.hard.interval.round().max(1.0) as u32,
-        good: next_states.good.interval.round().max(1.0) as u32,
-        easy: next_states.easy.interval.round().max(1.0) as u32,
+        again: next_states.again.interval.round() as u32,
+        hard: next_states.hard.interval.round() as u32,
+        good: next_states.good.interval.round() as u32,
+        easy: next_states.easy.interval.round() as u32,
     })
 }
 
@@ -138,7 +138,7 @@ pub async fn emit_card_review(
         4 => &next_states.easy,
         _ => return Err("Invalid rating".to_string()),
     };
-    let interval = next_state.interval.round().max(1.0) as u32;
+    let interval = next_state.interval.round() as u32;
 
     let memory_state = Some(next_state.memory.clone());
     let scheduled_days = interval;
@@ -156,7 +156,7 @@ pub async fn emit_card_review(
     .await
     .map_err(|e| e.to_string())?;
 
-    create_review(&state.pool, card.card_id, Utc::now(), rating)
+    create_review(&state.pool, card.card_id, last_review.unwrap(), rating)
         .await
         .map_err(|e| e.to_string())?;
 
