@@ -1,5 +1,5 @@
 use crate::models::Deck;
-use chrono::Utc;
+use chrono::{Local, Utc};
 use sqlx::{Result, SqlitePool};
 
 pub async fn create_deck(pool: &SqlitePool, deck_name: &str) -> Result<u32> {
@@ -26,14 +26,20 @@ pub async fn get_decks(pool: &SqlitePool) -> Result<Vec<Deck>> {
             toreview: 0,
         };
 
-        // 获取今天的日期范围（开始和结束）
-        let today = Utc::now();
-        let today_start = today.date_naive().and_hms_opt(0, 0, 0).unwrap();
-        let today_end = today.date_naive().and_hms_opt(23, 59, 59).unwrap();
+        // 获取当地时间的今天日期范围（开始和结束）
+        let today_local = Local::now();
+        let today_start_local = today_local.date_naive().and_hms_opt(0, 0, 0).unwrap();
+        let today_end_local = today_local.date_naive().and_hms_opt(23, 59, 59).unwrap();
 
-        // 转换为RFC3339格式，与数据库中存储的格式一致
-        let today_start_str = today_start.and_utc().to_rfc3339();
-        let today_end_str = today_end.and_utc().to_rfc3339();
+        // 转换为UTC时间用于数据库查询
+        let today_start_utc = today_start_local
+            .and_local_timezone(Local)
+            .unwrap()
+            .with_timezone(&Utc);
+        let today_end_utc = today_end_local
+            .and_local_timezone(Local)
+            .unwrap()
+            .with_timezone(&Utc);
 
         // 统计 tolearn：last_review 为 NULL 的卡片数量
         let tolearn_result = sqlx::query!(
@@ -52,10 +58,10 @@ pub async fn get_decks(pool: &SqlitePool) -> Result<Vec<Deck>> {
             WHERE deck_id = ? AND last_review >= ? 
             AND last_review <= ? AND due >= ? AND due <= ?",
             deck.deck_id,
-            today_start_str,
-            today_end_str,
-            today_start_str,
-            today_end_str
+            today_start_utc,
+            today_end_utc,
+            today_start_utc,
+            today_end_utc
         )
         .fetch_one(pool)
         .await?;
@@ -66,8 +72,8 @@ pub async fn get_decks(pool: &SqlitePool) -> Result<Vec<Deck>> {
             "SELECT COUNT(*) as count FROM cards 
             WHERE deck_id = ? AND last_review < ? AND due <= ?",
             deck.deck_id,
-            today_start_str,
-            today_end_str
+            today_start_utc,
+            today_end_utc
         )
         .fetch_one(pool)
         .await?;

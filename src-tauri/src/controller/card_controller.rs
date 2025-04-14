@@ -1,5 +1,5 @@
 use crate::models::Card;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Local, Utc};
 use sqlx::{Result, SqlitePool};
 
 pub fn merge_template_fields(fields: Vec<String>) -> String {
@@ -48,10 +48,14 @@ pub async fn get_cards_by_page(
       LIMIT ?
     ";
 
-    // 获取今天的日期范围（结束）
-    let today = Utc::now();
-    let today_end = today.date_naive().and_hms_opt(23, 59, 59).unwrap();
-    let today_end_str = today_end.and_utc().to_rfc3339();
+    // 获取当地时间的今天日期范围（结束）
+    let today_local = Local::now();
+    let today_end_local = today_local.date_naive().and_hms_opt(23, 59, 59).unwrap();
+    // 转换为UTC时间用于数据库查询
+    let today_end_utc = today_end_local
+        .and_local_timezone(Local)
+        .unwrap()
+        .with_timezone(&Utc);
 
     // 使用sqlx查询数据库
     let rows = sqlx::query_as::<
@@ -69,7 +73,7 @@ pub async fn get_cards_by_page(
         ),
     >(sql)
     .bind(deck_id as i64)
-    .bind(today_end_str)
+    .bind(today_end_utc)
     .bind(page_size as i64)
     .fetch_all(pool)
     .await?;
@@ -135,22 +139,28 @@ pub async fn get_cards_by_page(
 }
 
 pub async fn get_card_count_learned_today(pool: &SqlitePool) -> Result<u32> {
-    // 获取今天的日期范围（开始和结束）
-    let today = Utc::now();
-    let today_start = today.date_naive().and_hms_opt(0, 0, 0).unwrap();
-    let today_end = today.date_naive().and_hms_opt(23, 59, 59).unwrap();
+    // 获取当地时间的今天日期范围（开始和结束）
+    let today_local = Local::now();
+    let today_start_local = today_local.date_naive().and_hms_opt(0, 0, 0).unwrap();
+    let today_end_local = today_local.date_naive().and_hms_opt(23, 59, 59).unwrap();
 
-    // 转换为RFC3339格式，与数据库中存储的格式一致
-    let today_start_str = today_start.and_utc().to_rfc3339();
-    let today_end_str = today_end.and_utc().to_rfc3339();
+    // 转换为UTC时间用于数据库查询
+    let today_start_utc = today_start_local
+        .and_local_timezone(Local)
+        .unwrap()
+        .with_timezone(&Utc);
+    let today_end_utc = today_end_local
+        .and_local_timezone(Local)
+        .unwrap()
+        .with_timezone(&Utc);
 
     // 查询上次复习时间在今天，且due日期在今天以后的卡片数量
     let result = sqlx::query!(
         "SELECT COUNT(*) as count FROM cards 
         WHERE last_review >= ? AND last_review <= ? AND due > ?",
-        today_start_str,
-        today_end_str,
-        today_end_str
+        today_start_utc,
+        today_end_utc,
+        today_end_utc
     )
     .fetch_one(pool)
     .await?;
