@@ -25,7 +25,7 @@ import {
   DeckDataItem,
   ForecastDataItem,
   reviewDataItem,
-} from "./StatisticUtils";
+} from "@/CardMemo/StatisticUtils";
 
 // 模拟牌组数据 - 实际应用中应从后端获取
 const generateDecks = (): DeckDataItem[] => [

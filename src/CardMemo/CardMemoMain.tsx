@@ -19,12 +19,8 @@ import { useState, useEffect } from "react";
 import CardMemoStart from "./CardMemoStart";
 import Box from "@mui/material/Box";
 import { NavigateFunction, useNavigate } from "react-router-dom";
-import {
-  DeckData,
-  fetchDecks,
-  fetchLearningCount,
-  deleteDeck,
-} from "./CardMemoUtils";
+import { DeckData, fetchDecks, deleteDeck } from "@/api/Deck";
+import { fetchLearningCount } from "@/api/Card";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 

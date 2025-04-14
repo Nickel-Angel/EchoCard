@@ -1,12 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import App from "./App";
-import "./main.css";
-import CardMemoLearning from "./CardMemo/CardMemoLearning";
-import CardMemoEnd from "./CardMemo/CardMemoEnd";
-import CardMemoStatistic from "./CardMemo/CardMemoStatistic";
-import TemplateAdd from "./CardEdit/TemplateAdd";
+import App from "@/App";
+import "@/main.css";
+import CardMemoLearning from "@/CardMemo/CardMemoLearning";
+import CardMemoEnd from "@/CardMemo/CardMemoEnd";
+import CardMemoStatistic from "@/CardMemo/CardMemoStatistic";
+import TemplateAdd from "@/CardEdit/TemplateAdd";
 
 // router
 const router = createBrowserRouter([

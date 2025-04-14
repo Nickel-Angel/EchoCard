@@ -1,5 +1,9 @@
-import { CardData, TemplateData } from "../CardMemoUtils";
-import { TemplateInterface, TemplateProps } from "./TemplateInterface";
+import { CardData } from "@/api/Card";
+import { TemplateData } from "@/api/Template";
+import {
+  TemplateInterface,
+  TemplateProps,
+} from "@/CardMemo/templates/TemplateInterface";
 import { useState } from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";

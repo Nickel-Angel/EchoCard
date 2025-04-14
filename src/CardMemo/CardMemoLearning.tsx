@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { createDeckData } from "@/api/Deck";
 import {
-  createDeckData,
   loadCardsFromBackend,
-  loadTemplate,
   loadNextState,
   submitCardRating,
   CardData,
-  TemplateData,
   NextIntervals,
-} from "./CardMemoUtils";
-import { TemplateFactory } from "./templates/TemplateFactory";
-import { TemplateInterface } from "./templates/TemplateInterface";
+} from "@/api/Card";
+import { loadTemplate, TemplateData } from "@/api/Template";
+import { TemplateFactory } from "@/CardMemo/templates/TemplateFactory";
+import { TemplateInterface } from "@/CardMemo/templates/TemplateInterface";
 
 function CardMemoLearning() {
   const location = useLocation();

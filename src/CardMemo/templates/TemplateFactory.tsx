@@ -1,7 +1,7 @@
-import { TemplateData } from "../CardMemoUtils";
-import { TemplateInterface } from "./TemplateInterface";
-import { TextCardTemplate } from "./TextCardTemplate";
-import { SelectionCardTemplate } from "./SelectionCardTemplate";
+import { TemplateData } from "@/api/Template";
+import { TemplateInterface } from "@/CardMemo/templates/TemplateInterface";
+import { TextCardTemplate } from "@/CardMemo/templates/TextCardTemplate";
+import { SelectionCardTemplate } from "@/CardMemo/templates/SelectionCardTemplate";
 
 /**
  * 模板工厂类，用于创建不同类型的模板实例

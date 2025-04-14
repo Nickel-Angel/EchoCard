@@ -1,4 +1,5 @@
-import { CardData, TemplateData, NextIntervals } from "../CardMemoUtils";
+import { CardData, NextIntervals } from "@/api/Card";
+import { TemplateData } from "@/api/Template";
 
 export interface TemplateProps {
   cardContent: any;

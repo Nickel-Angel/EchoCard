@@ -1,6 +1,6 @@
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import { NextIntervals } from "../CardMemoUtils";
+import { NextIntervals } from "@/api/Card";
 
 interface RatingButtonsProps {
   handleRating: (rating: number) => void;
