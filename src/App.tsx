@@ -1,5 +1,4 @@
 import { useState } from "react";
-// import { invoke } from "@tauri-apps/api/core";
 import CardMemoMain from "./CardMemo/CardMemoMain";
 import CardEditMain from "./CardEdit/CardEditMain";
 import SettingsMain from "./Settings/SettingsMain";

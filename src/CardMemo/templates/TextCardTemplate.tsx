@@ -122,7 +122,7 @@ export class TextCardTemplate extends TemplateInterface {
         );
         return fieldIndex >= 0 &&
           fieldIndex < card.template_fields_content.length
-          ? `${field[0]}: ${card.template_fields_content[fieldIndex]}`
+          ? `${card.template_fields_content[fieldIndex]}`
           : "";
       })
       .filter((content) => content !== ""); // 过滤掉空内容
