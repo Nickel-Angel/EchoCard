@@ -10,7 +10,7 @@ use crate::controller::card_controller::{
 };
 use crate::controller::deck_controller::{delete_deck_by_id, get_decks};
 use crate::controller::review_controller::create_review;
-use crate::controller::template_controller::parse_template;
+use crate::controller::template_controller::{get_template, parse_template};
 use crate::models::Card;
 use crate::models::Deck;
 use crate::models::Template;
@@ -77,15 +77,33 @@ pub async fn get_next_card(
 }
 
 #[tauri::command]
-pub fn get_loaded_template(
+pub async fn get_loaded_template(
     state: tauri::State<'_, AppState>,
     template_id: u32,
 ) -> Result<Template, String> {
-    let loaded_template = state.loaded_template.lock().unwrap();
-    if loaded_template.contains_key(&template_id) {
-        Ok(loaded_template[&template_id].clone())
-    } else {
-        Err("Template not found".to_string())
+    // Check if template exists in loaded_template and clone it if it does
+    let template_from_cache = {
+        let loaded_template = state.loaded_template.lock().unwrap();
+        if loaded_template.contains_key(&template_id) {
+            Some(loaded_template[&template_id].clone())
+        } else {
+            None
+        }
+    }; // MutexGuard is dropped here
+
+    // Return the template if it was found in the cache
+    if let Some(template) = template_from_cache {
+        return Ok(template);
+    }
+
+    // If not in cache, fetch from database
+    let template = get_template(&state.pool, template_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    match template {
+        Some(template) => Ok(template),
+        None => Err("Template not found".to_string()),
     }
 }
 

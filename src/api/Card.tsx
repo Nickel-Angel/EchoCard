@@ -10,6 +10,14 @@ export interface CardData {
   last_review: string | null;
 }
 
+export interface DeckData {
+  deckId: number;
+  deckName: string;
+  tolearn: number;
+  learning: number;
+  toreview: number;
+}
+
 export interface NextIntervals {
   again: number;
   hard: number;
@@ -87,6 +95,27 @@ export async function loadNextState(
     return intervals;
   } catch (error) {
     console.error("加载下一状态失败:", error);
+    return null;
+  }
+}
+
+/**
+ * 添加新卡片
+ * @param cardData - 新卡片数据，包含牌组ID、模板ID和字段内容
+ * @returns Promise<number | null> - 返回新添加卡片的ID，添加失败时返回null
+ * @description 调用后端cardedit.rs中的add_card命令添加新卡片到指定牌组
+ */
+export async function addNewCard(cardData: {
+  deckId: number;
+  templateId: number;
+  templateFields: string[];
+}) {
+  try {
+    // 使用cardedit.rs中的add_card接口，该接口返回新卡片的ID
+    const cardId = await invoke<number>("add_card", cardData);
+    return cardId;
+  } catch (error) {
+    console.error("添加卡片失败:", error);
     return null;
   }
 }

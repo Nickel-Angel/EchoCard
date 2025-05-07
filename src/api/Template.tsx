@@ -6,6 +6,52 @@ export interface TemplateData {
   template_fields: [string, boolean][];
 }
 
+export interface TemplateFieldData {
+  field_id: number;
+  template_id: number;
+  name: string;
+  is_front: boolean;
+}
+
+/**
+ * 获取所有可用的模板
+ * @returns Promise<{id: number, name: string}[]> - 返回所有模板的简要信息列表
+ * @description 调用后端cardedit.rs中的template_display命令获取所有可用的卡片模板
+ */
+export async function getAllTemplates(): Promise<
+  { id: number; name: string }[]
+> {
+  try {
+    const templates = await invoke<TemplateData[]>("template_display");
+    return templates.map((template) => ({
+      id: template.template_id,
+      name: template.template_name,
+    }));
+  } catch (error) {
+    console.error("获取所有模板失败:", error);
+    return [];
+  }
+}
+
+/**
+ * 获取特定模板的所有字段
+ * @returns Promise<TemplateFieldData[]> - 返回所有字段
+ * @description 调用后端cardedit.rs中的get_fields命令获取所有可用的卡片模板
+ */
+export async function getTemplateFields(
+  templateId: number
+): Promise<TemplateFieldData[]> {
+  try {
+    const templateFields = await invoke<TemplateFieldData[]>("get_fields", {
+      templateId,
+    });
+    return templateFields;
+  } catch (error) {
+    console.error("获取模板字段失败:", error);
+    return [];
+  }
+}
+
 /**
  * 加载当前卡片的模板
  * @param templateId - 模板ID，指定要加载的模板

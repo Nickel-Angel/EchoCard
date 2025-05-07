@@ -8,7 +8,10 @@ import Paper from "@mui/material/Paper";
 import Grid from "@mui/material/Grid2";
 import { useState, useMemo } from "react";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import AddIcon from "@mui/icons-material/Add";
 import CardEditHeader, { FilterOptions, DeckOption } from "./CardEditHeader";
+import { useNavigate } from "react-router-dom";
 
 // 定义卡片数据接口
 interface CardData {
@@ -123,6 +126,8 @@ const CardPreview = ({ card }: { card: CardData | null }) => {
 };
 
 function CardEditMain() {
+  const navigate = useNavigate();
+
   // TODO: 从后端获取卡片数据
   const allCards: CardData[] = [
     createCardData(1, "A001", "基础模板", "2023-06-15", "英语单词"),
@@ -131,6 +136,11 @@ function CardEditMain() {
     createCardData(4, "D004", "填空模板", "2023-06-18", "编程概念"),
     createCardData(5, "E005", "多选模板", "2023-06-19", "地理知识"),
   ];
+
+  // 跳转到添加卡片页面
+  const handleAddCard = () => {
+    navigate("/card-add");
+  };
 
   // 选中的卡片状态
   const [selectedCard, setSelectedCard] = useState<CardData | null>(null);
@@ -193,12 +203,30 @@ function CardEditMain() {
 
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <CardEditHeader
-        deckOptions={deckOptions}
-        templateOptions={templateOptions}
-        filterOptions={filterOptions}
-        onFilterChange={handleFilterChange}
-      />
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
+        <CardEditHeader
+          deckOptions={deckOptions}
+          templateOptions={templateOptions}
+          filterOptions={filterOptions}
+          onFilterChange={handleFilterChange}
+        />
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={handleAddCard}
+          sx={{ ml: 2 }}
+        >
+          添加卡片
+        </Button>
+      </Box>
       <Grid container spacing={2} sx={{ flexGrow: 1 }}>
         <Grid size={5} sx={{ md: 7 }}>
           <CardTable rows={filteredCards} onCardSelect={handleCardSelect} />

@@ -1,6 +1,6 @@
 use crate::controller::card_controller::create_card;
 use crate::controller::deck_controller::create_deck;
-use crate::controller::template_controller::create_template;
+use crate::controller::template_controller::{create_template, get_template};
 use crate::models::Template;
 use sqlx::{sqlite::SqlitePool, Result};
 use std::fs;
@@ -74,12 +74,7 @@ pub async fn initialize_decks(pool: &SqlitePool) -> Result<()> {
 
     // 创建或获取选择题模板
     let choice_template_name = "选择题卡片";
-    let choice_template_id = match crate::controller::template_controller::get_template_by_name(
-        pool,
-        choice_template_name,
-    )
-    .await?
-    {
+    let choice_template_id = match get_template(pool, choice_template_name).await? {
         Some(template) => template.template_id,
         None => {
             // 模板不存在，创建新模板
@@ -99,12 +94,7 @@ pub async fn initialize_decks(pool: &SqlitePool) -> Result<()> {
 
     // 创建或获取普通卡片模板
     let basic_template_name = "正反面卡片";
-    let basic_template_id = match crate::controller::template_controller::get_template_by_name(
-        pool,
-        basic_template_name,
-    )
-    .await?
-    {
+    let basic_template_id = match get_template(pool, basic_template_name).await? {
         Some(template) => template.template_id,
         None => {
             // 模板不存在，创建新模板

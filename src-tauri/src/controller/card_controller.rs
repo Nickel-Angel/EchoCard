@@ -6,6 +6,35 @@ pub fn merge_template_fields(fields: Vec<String>) -> String {
     fields.join("\u{001F}")
 }
 
+/// 添加新卡片
+///
+/// 将新卡片添加到指定牌组，使用指定的模板和字段内容
+pub async fn add_card(
+    pool: &SqlitePool,
+    deck_id: i32,
+    template_id: i32,
+    field_contents: Vec<String>,
+) -> Result<i32> {
+    let merged_fields = merge_template_fields(field_contents);
+    let due = Utc::now();
+
+    let card_id = sqlx::query!(
+        "INSERT INTO cards 
+        (deck_id, template_id, template_fields, due, 
+        stability, difficulty, scheduled_days, last_review) 
+        VALUES (?, ?, ?, ?, NULL, NULL, 0, NULL)",
+        deck_id,
+        template_id,
+        merged_fields,
+        due,
+    )
+    .execute(pool)
+    .await?
+    .last_insert_rowid() as i32;
+
+    Ok(card_id)
+}
+
 pub async fn create_card(
     pool: &SqlitePool,
     deck_id: u32,

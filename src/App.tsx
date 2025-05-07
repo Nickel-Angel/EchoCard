@@ -1,4 +1,3 @@
-import { useState } from "react";
 import CardMemoMain from "./CardMemo/CardMemoMain";
 import CardEditMain from "./CardEdit/CardEditMain";
 import SettingsMain from "./Settings/SettingsMain";
@@ -9,6 +8,7 @@ import Box from "@mui/material/Box";
 import ImportContactsOutlinedIcon from "@mui/icons-material/ImportContactsOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import { useTabStore } from "./store/tabStore";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -45,10 +45,11 @@ function a11yProps(index: number) {
 }
 
 function App() {
-  const [value, setValue] = useState(0);
+  // 使用全局状态管理标签页选择
+  const { activeTab, setActiveTab } = useTabStore();
 
   const handleChange = (_: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
+    setActiveTab(newValue);
   };
 
   return (
@@ -63,7 +64,7 @@ function App() {
     >
       <Tabs
         orientation="vertical"
-        value={value}
+        value={activeTab}
         onChange={handleChange}
         aria-label="Vertical tabs example"
         sx={{ borderRight: 1, borderColor: "divider" }}
@@ -76,13 +77,13 @@ function App() {
         <Tab icon={<EditOutlinedIcon />} label="卡组编辑" {...a11yProps(1)} />
         <Tab icon={<SettingsOutlinedIcon />} label="设置" {...a11yProps(2)} />
       </Tabs>
-      <TabPanel value={value} index={0}>
+      <TabPanel value={activeTab} index={0}>
         <CardMemoMain />
       </TabPanel>
-      <TabPanel value={value} index={1}>
+      <TabPanel value={activeTab} index={1}>
         <CardEditMain />
       </TabPanel>
-      <TabPanel value={value} index={2}>
+      <TabPanel value={activeTab} index={2}>
         <SettingsMain />
       </TabPanel>
     </Box>

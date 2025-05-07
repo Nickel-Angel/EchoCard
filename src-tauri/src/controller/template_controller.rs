@@ -1,28 +1,57 @@
 use crate::models::Template;
+use crate::models::TemplateField;
 use sqlx::{Result, SqlitePool};
 
-pub async fn get_template_by_name(
+/// 根据模板ID或名称获取模板信息
+///
+/// # 参数
+/// * `pool` - 数据库连接池
+/// * `identifier` - 模板标识符，可以是ID或名称
+///
+/// # 返回值
+/// * `Result<Option<Template>>` - 如果找到模板则返回Some(Template)，否则返回None
+pub async fn get_template(
     pool: &SqlitePool,
-    template_name: &str,
+    identifier: impl Into<TemplateIdentifier<'_>>,
 ) -> Result<Option<Template>> {
-    // 查询模板基本信息
-    let template_row = sqlx::query!(
-        "SELECT template_id, name FROM templates WHERE name = ?",
-        template_name
-    )
-    .fetch_optional(pool)
-    .await?;
+    let identifier = identifier.into();
+
+    // 根据标识符类型构建查询
+    let template_row = match identifier {
+        TemplateIdentifier::Id(id) => {
+            let row = sqlx::query!(
+                "SELECT template_id, name FROM templates WHERE template_id = ?",
+                id
+            )
+            .fetch_optional(pool)
+            .await?;
+
+            // 转换为Option<(i64, String)>格式
+            row.map(|r| (r.template_id, r.name))
+        }
+        TemplateIdentifier::Name(name) => {
+            let row = sqlx::query!(
+                "SELECT template_id, name FROM templates WHERE name = ?",
+                name
+            )
+            .fetch_optional(pool)
+            .await?;
+
+            // 转换为Option<(i64, String)>格式
+            row.map(|r| (r.template_id, r.name))
+        }
+    };
 
     // 如果找不到模板，返回None
-    let template_row = match template_row {
+    let (template_id, template_name) = match template_row {
         Some(row) => row,
         None => return Ok(None),
     };
 
-    let template_id = template_row.template_id as u32;
+    let template_id = template_id as u32;
     let mut template = Template {
         template_id,
-        template_name: template_row.name,
+        template_name: template_name,
         template_fields: Vec::new(),
     };
 
@@ -41,6 +70,36 @@ pub async fn get_template_by_name(
 
     // 如果没有找到任何字段，可能是一个异常情况，但我们仍然返回模板信息
     Ok(Some(template))
+}
+
+/// 模板标识符枚举，用于支持通过ID或名称查询模板
+pub enum TemplateIdentifier<'a> {
+    Id(u32),
+    Name(&'a str),
+}
+
+impl From<u32> for TemplateIdentifier<'_> {
+    fn from(id: u32) -> Self {
+        TemplateIdentifier::Id(id)
+    }
+}
+
+impl<'a> From<&'a str> for TemplateIdentifier<'a> {
+    fn from(name: &'a str) -> Self {
+        TemplateIdentifier::Name(name)
+    }
+}
+
+// 为了向后兼容，保留原函数但内部调用新函数
+pub async fn get_template_by_id(pool: &SqlitePool, template_id: u32) -> Result<Option<Template>> {
+    get_template(pool, template_id).await
+}
+
+pub async fn get_template_by_name(
+    pool: &SqlitePool,
+    template_name: &str,
+) -> Result<Option<Template>> {
+    get_template(pool, template_name).await
 }
 
 pub async fn get_all_templates(pool: &SqlitePool) -> Result<Vec<Template>> {
@@ -154,4 +213,31 @@ pub async fn parse_template(pool: &SqlitePool, template_id: u32) -> Result<Templ
     }
 
     Ok(template)
+}
+
+pub async fn get_template_fields(
+    pool: &SqlitePool,
+    template_id: u32,
+) -> Result<Vec<TemplateField>> {
+    let fields = sqlx::query!(
+        "SELECT fields_id, template_id, name, is_front 
+        FROM template_fields 
+        WHERE template_id =? ORDER BY fields_id",
+        template_id
+    )
+    .fetch_all(pool)
+    .await?;
+
+    let mut template_fields = Vec::new();
+
+    for field in fields {
+        template_fields.push(TemplateField {
+            field_id: field.fields_id as u32,
+            template_id: field.template_id as u32,
+            name: field.name,
+            is_front: field.is_front,
+        });
+    }
+
+    Ok(template_fields)
 }

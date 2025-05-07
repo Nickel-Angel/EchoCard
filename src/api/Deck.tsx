@@ -24,12 +24,10 @@ export function createDeckData(
  * @returns void - 无返回值，通过setRows更新状态
  * @description 调用后端的decks_display命令获取所有牌组信息，包括每个牌组的ID、名称、待学习卡片数、学习中卡片数和待复习卡片数
  */
-export async function fetchDecks(
-  setRows: React.Dispatch<React.SetStateAction<DeckData[]>>
-) {
+export async function fetchDecks() {
   try {
     const decks = await invoke<any[]>("decks_display");
-    const deckData = decks.map((deck: any) =>
+    return decks.map((deck: any) =>
       createDeckData(
         deck.deck_id,
         deck.deck_name,
@@ -38,10 +36,10 @@ export async function fetchDecks(
         deck.toreview
       )
     );
-    setRows(deckData);
   } catch (error) {
     console.error("获取牌组信息失败:", error);
   }
+  return [];
 }
 
 /**

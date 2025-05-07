@@ -13,6 +13,9 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Alert,
+  CircularProgress,
+  Snackbar,
 } from "@mui/material";
 import styled from "@mui/material/styles/styled";
 import { useState, useEffect } from "react";
@@ -79,8 +82,16 @@ const DenseTable = ({ rows, navigate, refreshDecks }: DenseTableProps) => {
 
   const handleDeleteConfirm = async () => {
     if (deckToDelete) {
-      const success = await deleteDeck(deckToDelete.deckId);
-      if (success) {
+      try {
+        const success = await deleteDeck(deckToDelete.deckId);
+        if (success) {
+          refreshDecks();
+        } else {
+          throw new Error("删除牌组失败");
+        }
+      } catch (error) {
+        console.error("删除牌组出错:", error);
+        // 通知父组件显示错误信息
         refreshDecks();
       }
     }
@@ -196,16 +207,86 @@ function CardMemoMain() {
   // ];
   const [rows, setRows] = useState<DeckData[]>([]);
   const [learningNumber, setLearningNumber] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
   const navigate = useNavigate();
 
-  const refreshDecks = () => {
-    fetchDecks(setRows);
-    fetchLearningCount(setLearningNumber);
+  // 处理错误提示关闭
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
+  const refreshDecks = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const rowList = await fetchDecks();
+      setRows(rowList);
+      try {
+        await fetchLearningCount(setLearningNumber);
+      } catch (learningError) {
+        console.error("获取学习统计数据失败:", learningError);
+        // 不影响主要功能，只记录错误
+      }
+    } catch (error) {
+      console.error("获取牌组数据失败:", error);
+      setError("获取牌组数据失败，请稍后重试");
+      setSnackbarOpen(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    refreshDecks();
+    const fetchData = async () => {
+      await refreshDecks();
+    };
+    
+    fetchData();
+    
+    // 组件卸载时的清理函数
+    return () => {
+      // 这里可以添加取消请求的逻辑，如果有使用可取消的请求库
+    };
   }, []);
+
+  // 显示加载状态
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "200px",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // 显示错误状态
+  if (error && rows.length === 0) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 2,
+          padding: 3,
+        }}
+      >
+        <Alert severity="error">{error}</Alert>
+        <Button variant="contained" onClick={refreshDecks}>
+          重试
+        </Button>
+      </Box>
+    );
+  }
 
   if (rows.length !== 0) {
     return (
@@ -232,9 +313,22 @@ function CardMemoMain() {
             查看详细统计
           </Button>
         </div>
+        
+        {/* 错误提示 Snackbar */}
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={6000}
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert onClose={handleSnackbarClose} severity="error" sx={{ width: "100%" }}>
+            {error}
+          </Alert>
+        </Snackbar>
       </div>
     );
   }
+  
   return (
     <Box
       sx={{
@@ -247,7 +341,12 @@ function CardMemoMain() {
         你还没有卡组哦，快去添加卡组吧~
         <br />
         <br />
-        <Button variant="contained">添加卡组</Button>
+        <Button 
+          variant="contained"
+          onClick={() => navigate("/card-edit")}
+        >
+          添加卡组
+        </Button>
       </Box>
     </Box>
   );

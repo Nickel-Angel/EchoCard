@@ -70,6 +70,14 @@ pub struct Review {
     pub rating: u32,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TemplateField {
+    pub field_id: u32,
+    pub template_id: u32,
+    pub name: String,
+    pub is_front: bool,
+}
+
 impl Default for Template {
     fn default() -> Self {
         Self {
@@ -113,6 +121,17 @@ impl Default for Review {
             card_id: 0,
             review_date: NaiveDate::from_ymd_opt(2023, 1, 1).unwrap(),
             rating: 0,
+        }
+    }
+}
+
+impl Default for TemplateField {
+    fn default() -> Self {
+        Self {
+            field_id: 0,
+            template_id: 0,
+            name: String::new(),
+            is_front: false,
         }
     }
 }

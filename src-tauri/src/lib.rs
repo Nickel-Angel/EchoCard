@@ -4,7 +4,7 @@ mod database;
 mod models;
 use std::{collections::HashMap, fs};
 
-use commands::cardedit::{card_filter, template_display};
+use commands::cardedit::{add_card, card_filter, get_fields, template_display};
 use commands::cardmemo::{
     card_count_learned_today, decks_display, delete_deck, emit_card_review, get_loaded_template,
     get_next_card, load_next_state,
@@ -117,6 +117,8 @@ pub fn run() {
             delete_deck,
             card_filter,
             template_display,
+            add_card,
+            get_fields,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

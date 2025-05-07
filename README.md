@@ -9,3 +9,9 @@ This template should help get you started developing with Tauri, React and Types
 ## sqlx check
 
 Before trying to build, run `cargo sqlx prepare -D sqlite://db/echocard.db` in the terminal.
+
+---
+TODO:
+- impl: using csv to add cards
+- impl: settings(FSRS parameters, set retention)
+- impl: UI optimization
