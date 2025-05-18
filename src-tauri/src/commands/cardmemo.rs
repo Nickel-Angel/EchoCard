@@ -9,7 +9,7 @@ use crate::controller::card_controller::{
     get_card_count_learned_today, get_cards_by_page, update_card_state,
 };
 use crate::controller::deck_controller::{delete_deck_by_id, get_decks};
-use crate::controller::review_controller::create_review;
+use crate::controller::review_controller::{create_review, train_fsrs_parameters};
 use crate::controller::template_controller::{get_template, parse_template};
 use crate::models::Card;
 use crate::models::Deck;
@@ -112,16 +112,18 @@ pub async fn load_next_state(
     state: tauri::State<'_, AppState>,
     card: Card,
 ) -> Result<NextIntervals, String> {
-    let fsrs = FSRS::new(Some(&state.fsrs_params)).unwrap();
+    let fsrs_params = state.fsrs_params.lock().unwrap();
+    let desired_retention = state.desired_retention.lock().unwrap();
+    let fsrs = FSRS::new(Some(&*fsrs_params)).unwrap();
     let review_date = Utc::now();
     let next_states = match card.last_review {
         Some(last_review) => {
             let elapsed_days = (review_date - last_review).num_days() as u32;
-            fsrs.next_states(card.memory_state, state.desired_retention, elapsed_days)
+            fsrs.next_states(card.memory_state, *desired_retention, elapsed_days)
                 .unwrap()
         }
         None => fsrs
-            .next_states(card.memory_state, state.desired_retention, 0)
+            .next_states(card.memory_state, *desired_retention, 0)
             .unwrap(),
     };
     let mut loaded_card = state.loaded_card.lock().unwrap();

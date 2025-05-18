@@ -9,6 +9,9 @@ use commands::cardmemo::{
     card_count_learned_today, decks_display, delete_deck, emit_card_review, get_loaded_template,
     get_next_card, load_next_state,
 };
+use commands::settings::{
+    get_desired_retention, get_fsrs_params, set_desired_retention, train_fsrs_model,
+};
 use database::{initialize_database, initialize_decks};
 use fsrs::NextStates;
 use models::{Card, Template};
@@ -19,15 +22,16 @@ use tauri::Manager;
 
 use std::sync::{Arc, Mutex};
 
-pub type SafeHashMap<T, E> = Arc<Mutex<HashMap<T, E>>>;
+pub type Safe<T> = Arc<Mutex<T>>;
+pub type SafeHashMap<T, E> = Safe<HashMap<T, E>>;
 
 pub struct AppState {
     pool: SqlitePool,
     loaded_template: SafeHashMap<u32, Template>,
-    loaded_card: Arc<Mutex<Option<Card>>>,
-    loaded_next_states: Arc<Mutex<Option<NextStates>>>,
-    fsrs_params: [f32; 19],
-    desired_retention: f32,
+    loaded_card: Safe<Option<Card>>,
+    loaded_next_states: Safe<Option<NextStates>>,
+    fsrs_params: Safe<[f32; 19]>,
+    desired_retention: Safe<f32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -72,8 +76,8 @@ pub fn run() {
                 loaded_template: Arc::new(Mutex::new(HashMap::new())),
                 loaded_card: Arc::new(Mutex::new(None)),
                 loaded_next_states: Arc::new(Mutex::new(None)),
-                fsrs_params: config.fsrs_params,
-                desired_retention: config.desired_retention,
+                fsrs_params: Arc::new(Mutex::new(config.fsrs_params)),
+                desired_retention: Arc::new(Mutex::new(config.desired_retention)),
             });
             Ok(())
         })
@@ -91,8 +95,10 @@ pub fn run() {
                 if let Ok(config_json) = fs::read_to_string(&conf_path) {
                     if let Ok(mut config) = serde_json::from_str::<Config>(&config_json) {
                         // 只更新 FSRS 参数
-                        config.fsrs_params = state.fsrs_params;
-                        config.desired_retention = state.desired_retention;
+                        let fsrs_params = state.fsrs_params.lock().unwrap();
+                        let desired_retention = state.desired_retention.lock().unwrap();
+                        config.fsrs_params = *fsrs_params;
+                        config.desired_retention = *desired_retention;
 
                         // 将更新后的配置写回文件
                         if let Ok(updated_json) = serde_json::to_string_pretty(&config) {
@@ -119,6 +125,10 @@ pub fn run() {
             template_display,
             add_card,
             get_fields,
+            train_fsrs_model,
+            get_fsrs_params,
+            set_desired_retention,
+            get_desired_retention,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
