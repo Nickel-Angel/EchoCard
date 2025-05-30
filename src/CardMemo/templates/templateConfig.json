@@ -1,0 +1,14 @@
+{
+  "templates": [
+    {
+      "templateName": "选择题卡片",
+      "className": "SelectionCardTemplate",
+      "importPath": "@/CardMemo/templates/SelectionCardTemplate"
+    },
+    {
+      "templateName": "正反面卡片",
+      "className": "TextCardTemplate",
+      "importPath": "@/CardMemo/templates/TextCardTemplate"
+    }
+  ]
+}
