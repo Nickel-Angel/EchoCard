@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import Box from "@mui/material/Box";
 import { createDeckData } from "@/api/Deck";
 import {
   loadCardsFromBackend,
@@ -146,7 +147,7 @@ function CardMemoLearning() {
   };
 
   return (
-    <div>
+    <Box sx={{ minWidth: 320, width: "100%" }}>
       {templateInstance && parsedCardContent ? (
         // 使用模板实例渲染卡片
         templateInstance.renderCard({
@@ -156,9 +157,18 @@ function CardMemoLearning() {
           nextIntervals,
         })
       ) : (
-        <div>加载中...</div>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "200px",
+          }}
+        >
+          加载中...
+        </Box>
       )}
-    </div>
+    </Box>
   );
 }
 

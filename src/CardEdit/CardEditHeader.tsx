@@ -9,8 +9,6 @@ import Checkbox from "@mui/material/Checkbox";
 import ListItemText from "@mui/material/ListItemText";
 import Chip from "@mui/material/Chip";
 import OutlinedInput from "@mui/material/OutlinedInput";
-import Button from "@mui/material/Button";
-import { useNavigate } from "react-router-dom";
 
 // 定义牌组数据接口
 export interface DeckOption {
@@ -55,8 +53,6 @@ function CardEditHeader({
   filterOptions,
   onFilterChange,
 }: CardEditHeaderProps) {
-  const navigate = useNavigate();
-
   // 处理牌组选择变化
   const handleDeckChange = (event: SelectChangeEvent<number[]>) => {
     const value = event.target.value as number[];
@@ -98,22 +94,30 @@ function CardEditHeader({
         gap: 2,
       }}
     >
-      <Typography variant="h5" component="h1">
+      <Typography
+        variant="h5"
+        component="h1"
+        noWrap
+        sx={{ minWidth: 100, flexShrink: 0 }}
+      >
         卡片编辑
       </Typography>
-
-      <Button onClick={() => navigate("/template-add")}>添加模板</Button>
 
       <Box
         sx={{
           display: "flex",
-          flexDirection: { xs: "column", md: "row" },
+          flexDirection: "row",
+          flexWrap: "wrap",
           gap: 2,
-          width: { xs: "100%", md: "auto" },
+          width: "100%",
+          justifyContent: { xs: "space-between", sm: "flex-start" },
         }}
       >
         {/* 牌组筛选 */}
-        <FormControl sx={{ minWidth: 200 }} size="small">
+        <FormControl
+          sx={{ width: { xs: "100%", sm: "auto", md: "200px" } }}
+          size="small"
+        >
           <InputLabel id="deck-select-label">所属牌组</InputLabel>
           <Select
             labelId="deck-select-label"
@@ -148,7 +152,10 @@ function CardEditHeader({
         </FormControl>
 
         {/* 学习状态筛选 */}
-        <FormControl sx={{ minWidth: 200 }} size="small">
+        <FormControl
+          sx={{ width: { xs: "100%", sm: "auto", md: "200px" } }}
+          size="small"
+        >
           <InputLabel id="status-select-label">学习状态</InputLabel>
           <Select
             labelId="status-select-label"
@@ -178,7 +185,10 @@ function CardEditHeader({
         </FormControl>
 
         {/* 卡片模板筛选 */}
-        <FormControl sx={{ minWidth: 200 }} size="small">
+        <FormControl
+          sx={{ width: { xs: "100%", sm: "auto", md: "200px" } }}
+          size="small"
+        >
           <InputLabel id="template-select-label">卡片模板</InputLabel>
           <Select
             labelId="template-select-label"

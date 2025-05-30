@@ -20,11 +20,8 @@ import {
   TemplateFieldData,
 } from "@/api/Template";
 import { addNewCard } from "@/api/Card";
+import BatchImportDialog from "@/CardEdit/BatchImportDialog";
 
-/**
- * 卡片添加页面组件
- * 提供类似Anki的卡片添加功能，包括选择卡组、模板，并根据模板动态生成字段输入表单
- */
 function CardAdd() {
   const navigate = useNavigate();
   const { setActiveTab } = useTabStore();
@@ -42,6 +39,9 @@ function CardAdd() {
   const [fieldValues, setFieldValues] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 批量导入对话框状态
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   // 加载牌组数据
   useEffect(() => {
@@ -209,9 +209,30 @@ function CardAdd() {
     navigate("/");
   };
 
+  // 打开批量导入对话框
+  const handleOpenImportDialog = () => {
+    if (!selectedDeckId || !selectedTemplateId || !currentTemplate) {
+      setError("请先选择牌组和模板");
+      return;
+    }
+    setImportDialogOpen(true);
+  };
+
+  // 关闭批量导入对话框
+  const handleCloseImportDialog = () => {
+    setImportDialogOpen(false);
+  };
+
   return (
     <Box
-      sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}
+      sx={{
+        p: 2,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        minWidth: 320,
+        width: "100%",
+      }}
     >
       <Box
         sx={{
@@ -224,9 +245,27 @@ function CardAdd() {
         <Typography variant="h5" component="h1">
           添加新卡片
         </Typography>
-        <Button variant="outlined" onClick={handleBack}>
-          返回列表
-        </Button>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={handleOpenImportDialog}
+            sx={{ mr: 2, borderRadius: 2, minWidth: 120 }}
+          >
+            批量导入
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={handleBack}
+            sx={{ mr: 2, borderRadius: 2, minWidth: 120 }}
+          >
+            返回列表
+          </Button>
+        </Box>
       </Box>
 
       <Paper sx={{ p: 3, mb: 3 }}>
@@ -310,11 +349,31 @@ function CardAdd() {
               color="primary"
               onClick={handleSubmit}
               disabled={isSubmitting}
+              sx={{ borderRadius: 2, minWidth: 120 }}
             >
               {isSubmitting ? "添加中..." : "添加卡片"}
             </Button>
           </Box>
         </Paper>
+      )}
+
+      {/* 批量导入对话框 */}
+      {currentTemplate && (
+        <BatchImportDialog
+          open={importDialogOpen}
+          onClose={handleCloseImportDialog}
+          deckId={selectedDeckId}
+          deckName={
+            decks.find((d) => d.deckId === Number(selectedDeckId))?.deckName ||
+            ""
+          }
+          templateId={selectedTemplateId}
+          templateName={
+            templates.find((t) => t.id === Number(selectedTemplateId))?.name ||
+            ""
+          }
+          templateFields={currentTemplate.template_fields}
+        />
       )}
     </Box>
   );

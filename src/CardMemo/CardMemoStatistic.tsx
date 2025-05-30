@@ -32,7 +32,7 @@ const generateDecks = (): DeckDataItem[] => [
   { deckIndex: 0, name: "全部", tolearn: 0, learning: 0, toreview: 0 },
   {
     deckIndex: 1,
-    name: "Frozen yoghurt",
+    name: "英语单词",
     tolearn: 159,
     learning: 6,
     toreview: 24,
@@ -88,12 +88,10 @@ const generateForecastData = (): ForecastDataItem[] => {
 const generateStatusData = (
   tolearn: number = 0,
   learning: number = 0,
-  reviewed: number = 0,
   toreview: number = 0
 ) => [
   { name: "未学习", value: tolearn, color: "#8884d8" },
   { name: "学习中", value: learning, color: "#82ca9d" },
-  { name: "已掌握", value: reviewed, color: "#ffc658" },
   { name: "待复习", value: toreview, color: "#ff8042" },
 ];
 
@@ -131,7 +129,7 @@ function CardMemoStatistic() {
     if (e.target.value === 0) {
       // 全部牌组数据
       setForecastData(generateForecastData());
-      setStatusData(generateStatusData(23, 49, 30, 32));
+      setStatusData(generateStatusData(23, 49, 32));
       setReviewData(generateReviewData());
     } else {
       // 特定牌组数据 - 这里简单修改一下数据以示区别
@@ -144,7 +142,7 @@ function CardMemoStatistic() {
         }))
       );
       setStatusData(
-        generateStatusData(23, 49, 30, 32).map((item) => ({
+        generateStatusData(23, 49, 32).map((item) => ({
           ...item,
           value: Math.floor(item.value * multiplier),
         }))
@@ -159,7 +157,9 @@ function CardMemoStatistic() {
   };
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto", px: 2 }}>
+    <Box
+      sx={{ maxWidth: 1200, minWidth: 320, mx: "auto", px: 2, width: "100%" }}
+    >
       {/* 固定在顶部的导航栏 */}
       <StatisticHeader
         decks={decks}

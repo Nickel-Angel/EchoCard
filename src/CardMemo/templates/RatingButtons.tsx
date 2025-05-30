@@ -33,7 +33,7 @@ export function RatingButtons({
         忘记{" "}
         {nextIntervals?.again
           ? `(${nextIntervals.again < 1 ? "<1" : nextIntervals.again} 天)`
-          : ""}
+          : "(<1 天)"}
       </Button>
       <Button
         variant="contained"
@@ -44,7 +44,7 @@ export function RatingButtons({
         困难{" "}
         {nextIntervals?.hard
           ? `(${nextIntervals.hard < 1 ? "<1" : nextIntervals.hard} 天)`
-          : ""}
+          : "(<1 天)"}
       </Button>
       <Button
         variant="contained"
@@ -55,7 +55,7 @@ export function RatingButtons({
         良好{" "}
         {nextIntervals?.good
           ? `(${nextIntervals.good < 1 ? "<1" : nextIntervals.good} 天)`
-          : ""}
+          : "(<1 天)"}
       </Button>
       <Button
         variant="contained"
@@ -66,7 +66,7 @@ export function RatingButtons({
         简单{" "}
         {nextIntervals?.easy
           ? `(${nextIntervals.easy < 1 ? "<1" : nextIntervals.easy} 天)`
-          : ""}
+          : "(<1 天)"}
       </Button>
     </Box>
   );

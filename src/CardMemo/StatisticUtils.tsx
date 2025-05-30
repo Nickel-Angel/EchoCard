@@ -53,6 +53,7 @@ function StatisticHeader({
         justifyContent: "space-between",
         alignItems: "center",
         width: "100%",
+        minWidth: 320,
       }}
     >
       <Typography variant="h5" component="h1">
@@ -103,6 +104,7 @@ function StatisticFooter() {
           justifyContent: "center",
           alignItems: "center",
           width: "100%",
+          minWidth: 320,
           boxShadow: 3,
         }}
       >
@@ -121,7 +123,7 @@ function StatisticFooter() {
             onClick={() => {
               navigate("/");
             }}
-            sx={{ minWidth: 120 }}
+            sx={{ minWidth: 120, borderRadius: 2 }}
           >
             返回主页
           </Button>

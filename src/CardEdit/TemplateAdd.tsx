@@ -408,27 +408,47 @@ function TemplateAdd() {
     >
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <Tooltip title="返回主页">
-          <IconButton color="primary" onClick={() => navigate("/")}>
+          <IconButton
+            color="primary"
+            onClick={() => navigate("/")}
+            sx={{ borderRadius: 2 }}
+          >
             <HomeIcon />
           </IconButton>
         </Tooltip>
         <Tooltip title="矩形">
-          <IconButton color="primary" onClick={addRectangle}>
+          <IconButton
+            color="primary"
+            onClick={addRectangle}
+            sx={{ borderRadius: 2 }}
+          >
             <CropSquareIcon />
           </IconButton>
         </Tooltip>
         <Tooltip title="圆形">
-          <IconButton color="primary" onClick={addCircle}>
+          <IconButton
+            color="primary"
+            onClick={addCircle}
+            sx={{ borderRadius: 2 }}
+          >
             <RadioButtonUncheckedIcon />
           </IconButton>
         </Tooltip>
         <Tooltip title="文本">
-          <IconButton color="primary" onClick={addText}>
+          <IconButton
+            color="primary"
+            onClick={addText}
+            sx={{ borderRadius: 2 }}
+          >
             <TitleIcon />
           </IconButton>
         </Tooltip>
         <Tooltip title="清空画布">
-          <IconButton color="primary" onClick={clearCanvas}>
+          <IconButton
+            color="secondary"
+            onClick={clearCanvas}
+            sx={{ borderRadius: 2 }}
+          >
             <ClearIcon />
           </IconButton>
         </Tooltip>
@@ -555,6 +575,8 @@ function TemplateAdd() {
         display: "flex",
         flexDirection: "column",
         height: "100%",
+        minWidth: 320,
+        width: "100%",
       }}
     >
       <Box
@@ -580,6 +602,7 @@ function TemplateAdd() {
             bottom: 20,
             zIndex: 1000,
             boxShadow: 3,
+            borderRadius: 2,
           }}
         >
           <PaletteIcon />
