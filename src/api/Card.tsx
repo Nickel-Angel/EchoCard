@@ -185,3 +185,21 @@ export async function updateCardContent(
     return false;
   }
 }
+
+/**
+ * 删除卡片
+ * @param cardId - 卡片ID，指定要删除的卡片
+ * @returns Promise<boolean> - 返回是否成功删除卡片，true表示成功，false表示失败
+ * @description 调用后端cardedit.rs中的delete_card命令删除指定卡片及其相关复习记录
+ */
+export async function deleteCard(cardId: number): Promise<boolean> {
+  try {
+    await invoke("delete_card", {
+      cardId,
+    });
+    return true;
+  } catch (error) {
+    console.error("删除卡片失败:", error);
+    return false;
+  }
+}

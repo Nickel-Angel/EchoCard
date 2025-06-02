@@ -5,7 +5,7 @@ mod models;
 use std::{collections::HashMap, fs};
 
 use commands::cardedit::{
-    add_card, add_template, add_template_config, card_filter, delete_card, get_fields,
+    add_card, add_deck, add_template, add_template_config, card_filter, delete_card, get_fields,
     get_template_config, template_display, update_card_content,
 };
 use commands::cardmemo::{
@@ -134,6 +134,7 @@ pub fn run() {
             get_desired_retention,
             update_card_content,
             add_template,
+            add_deck,
             get_template_config,
             add_template_config,
             delete_card,

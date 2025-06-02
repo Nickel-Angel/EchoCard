@@ -1,6 +1,7 @@
 use crate::controller::card_controller::{
     create_card, delete_card_by_id, get_card_by_filter, update_card_fields,
 };
+use crate::controller::deck_controller::create_deck;
 use crate::controller::template_controller::{
     create_template, get_all_templates, get_template_fields,
 };
@@ -166,6 +167,15 @@ pub async fn add_template_config(
 #[tauri::command]
 pub async fn delete_card(state: tauri::State<'_, AppState>, card_id: u32) -> Result<(), String> {
     delete_card_by_id(&state.pool, card_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn add_deck(state: tauri::State<'_, AppState>, deck_name: String) -> Result<(), String> {
+    create_deck(&state.pool, &deck_name)
         .await
         .map_err(|e| e.to_string())?;
 

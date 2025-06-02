@@ -57,3 +57,13 @@ export async function deleteDeck(deckId: number) {
     return false;
   }
 }
+
+export async function createDeck(deckName: string) {
+  try {
+    await invoke("add_deck", { deckName });
+    return true;
+  } catch (error) {
+    console.error("创建卡组失败:", error);
+    return false;
+  }
+}

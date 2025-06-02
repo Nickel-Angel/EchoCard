@@ -6,6 +6,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
+import AddIcon from "@mui/icons-material/Add";
 import {
   Modal,
   Dialog,
@@ -20,13 +21,13 @@ import {
 import styled from "@mui/material/styles/styled";
 import { useState, useEffect } from "react";
 import CardMemoStart from "./CardMemoStart";
+import AddDeckDialog from "./AddDeckDialog";
 import Box from "@mui/material/Box";
 import { NavigateFunction, useNavigate } from "react-router-dom";
 import { DeckData, fetchDecks, deleteDeck } from "@/api/Deck";
 import { fetchLearningCount } from "@/api/Card";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useTabStore } from "@/store/tabStore";
 
 interface DenseTableProps {
   rows: DeckData[];
@@ -199,24 +200,32 @@ const DenseTable = ({ rows, navigate, refreshDecks }: DenseTableProps) => {
 };
 
 function CardMemoMain() {
-  // const rows: DeckData[] = [
-  //   createDeckData(1, "Frozen yoghurt", 159, 6, 24),
-  //   createDeckData(2, "Ice cream sandwich", 237, 9, 37),
-  //   createDeckData(3, "Eclair", 262, 16, 24),
-  //   createDeckData(4, "Cupcake", 305, 3, 67),
-  //   createDeckData(5, "Gingerbread", 356, 16, 49),
-  // ];
   const [rows, setRows] = useState<DeckData[]>([]);
   const [learningNumber, setLearningNumber] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [addDeckDialogOpen, setAddDeckDialogOpen] = useState(false);
   const navigate = useNavigate();
-  const { setActiveTab } = useTabStore();
 
   // 处理错误提示关闭
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
+  };
+
+  // 处理添加卡组对话框打开
+  const handleAddDeckOpen = () => {
+    setAddDeckDialogOpen(true);
+  };
+
+  // 处理添加卡组对话框关闭
+  const handleAddDeckClose = () => {
+    setAddDeckDialogOpen(false);
+  };
+
+  // 处理卡组添加成功
+  const handleDeckAdded = () => {
+    refreshDecks();
   };
 
   const refreshDecks = async () => {
@@ -303,16 +312,26 @@ function CardMemoMain() {
             paddingTop: "20px",
             display: "flex",
             alignItems: "center",
-            gap: "10px",
+            justifyContent: "space-between",
           }}
         >
-          <p>今天共学习了 {learningNumber} 张卡片。</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <p>今天共学习了 {learningNumber} 张卡片。</p>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => navigate("/card-memo-statistic")}
+            >
+              查看详细统计
+            </Button>
+          </div>
           <Button
-            variant="outlined"
-            size="small"
-            onClick={() => navigate("/card-memo-statistic")}
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleAddDeckOpen}
+            sx={{ borderRadius: 2 }}
           >
-            查看详细统计
+            添加卡组
           </Button>
         </div>
 
@@ -331,6 +350,13 @@ function CardMemoMain() {
             {error}
           </Alert>
         </Snackbar>
+
+        {/* 添加卡组对话框 */}
+        <AddDeckDialog
+          open={addDeckDialogOpen}
+          onClose={handleAddDeckClose}
+          onDeckAdded={handleDeckAdded}
+        />
       </div>
     );
   }
@@ -347,18 +373,17 @@ function CardMemoMain() {
         你还没有卡组哦，快去添加卡组吧~
         <br />
         <br />
-        <Button
-          variant="contained"
-          onClick={() => {
-            // 设置全局标签状态为卡片编辑页（索引为1）
-            setActiveTab(1);
-            // 导航回主页
-            navigate("/");
-          }}
-        >
+        <Button variant="contained" onClick={handleAddDeckOpen}>
           添加卡组
         </Button>
       </Box>
+
+      {/* 添加卡组对话框 */}
+      <AddDeckDialog
+        open={addDeckDialogOpen}
+        onClose={handleAddDeckClose}
+        onDeckAdded={handleDeckAdded}
+      />
     </Box>
   );
 }

@@ -402,6 +402,79 @@ function CardEditMain() {
     }
   };
 
+  // 处理卡片删除后的回调
+  const handleCardDeleted = () => {
+    // 清空选中的卡片
+    setSelectedCard(null);
+    // 重新获取卡片列表
+    const fetchFilteredCards = async () => {
+      // 如果模板和牌组数据还未加载完成，则不进行筛选
+      if (templates.length === 0 || decks.length === 0) {
+        return;
+      }
+
+      setIsLoading(true);
+
+      // 转换模板名称为模板ID
+      const templateIds = filterOptions.templates
+        .map((templateName) => {
+          const template = templates.find((t) => t.name === templateName);
+          return template ? template.id : -1;
+        })
+        .filter((id) => id !== -1);
+
+      // 获取选中的牌组ID
+      const deckIds = filterOptions.decks;
+
+      // 计算状态位过滤器
+      let statusBitFilter = 0;
+      filterOptions.statuses.forEach((status) => {
+        statusBitFilter |= statusBitMap[status] || 0;
+      });
+
+      // 如果没有选择任何筛选条件，则使用所有模板和牌组
+      const finalTemplateIds =
+        templateIds.length > 0 ? templateIds : templates.map((t) => t.id);
+      const finalDeckIds =
+        deckIds.length > 0 ? deckIds : decks.map((d) => d.deckId);
+      const finalStatusBitFilter = statusBitFilter > 0 ? statusBitFilter : 7; // 7 = 0111，表示所有状态
+
+      try {
+        const backendCards = await filterCards(
+          finalTemplateIds,
+          finalDeckIds,
+          finalStatusBitFilter
+        );
+
+        if (backendCards) {
+          // 创建一个 Map 用于存储原始的后端卡片数据，以便在选择卡片时获取完整的 CardData
+          const cardsMap = new Map<number, CardData>();
+          backendCards.forEach((card) => {
+            cardsMap.set(card.card_id, card);
+          });
+          setBackendCardsMap(cardsMap);
+
+          // 将后端卡片数据转换为前端卡片数据（用于表格显示）
+          const frontendCards = backendCards.map((card) =>
+            convertBackendCardToFrontend(card, templateMap, deckMap)
+          );
+          setCards(frontendCards);
+        } else {
+          setBackendCardsMap(new Map());
+          setCards([]);
+        }
+      } catch (error) {
+        console.error("获取卡片失败:", error);
+        setBackendCardsMap(new Map());
+        setCards([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFilteredCards();
+  };
+
   return (
     <Box
       sx={{
@@ -461,7 +534,7 @@ function CardEditMain() {
           />
         </Grid>
         <Grid size={7} sx={{ minHeight: "400px" }}>
-          <CardPreview card={selectedCard} />
+          <CardPreview card={selectedCard} onCardDeleted={handleCardDeleted} />
         </Grid>
       </Grid>
     </Box>
