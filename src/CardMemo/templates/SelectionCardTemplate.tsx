@@ -4,111 +4,89 @@ import {
   TemplateInterface,
   TemplateProps,
 } from "@/CardMemo/templates/TemplateInterface";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardActions from "@mui/material/CardActions";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import { RatingButtons } from "./RatingButtons";
 
 export function SelectionCard({
   cardContent,
-  handleRating,
   emitCorrect,
-  nextIntervals,
+  ratingButtons,
 }: TemplateProps) {
-  // 使用React hooks创建组件状态
-  const [showBack, setShowBack] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
 
-  // 将选项文本按换行符分割成数组
-  const optionsList = cardContent.options.split("\n");
+  // 当卡片内容变化时重置状态
+  useEffect(() => {
+    setSelectedOption(null);
+    setShowAnswer(false);
+    setIsCorrect(false);
+  }, [cardContent]);
 
   // 处理选项点击
-  const handleOptionClick = (option: string) => {
-    setSelectedOption(option);
-    setShowBack(true);
-  };
-
-  const isCorrect = (
-    rating: number,
-    userAnswer?: string | null,
-    correctAnswer?: string | null
-  ) => {
-    // 对于选择题，如果提供了用户答案和正确答案，则直接比较它们是否相等
-    if (userAnswer !== undefined && correctAnswer !== undefined) {
-      return userAnswer === correctAnswer;
+  const handleOptionClick = (index: number) => {
+    if (!showAnswer) {
+      setSelectedOption(index);
+      setIsCorrect(index === cardContent.correctOption);
+      setShowAnswer(true);
     }
-    // 否则回退到基于评分的判断
-    return rating > 1;
-  };
-
-  // 处理评分，根据用户选择是否正确调整评分
-  const handleRatingWithCheck = (baseRating: number) => {
-    // 判断用户选择是否正确
-    if (isCorrect(baseRating, selectedOption, cardContent.answer)) {
-      emitCorrect();
-    }
-    // 调用原始的handleRating函数
-    handleRating(baseRating);
   };
 
   return (
-    <Card>
+    <Card sx={{ width: "100%", maxWidth: 800, mx: "auto", my: 2 }}>
       <CardContent>
-        {/* 问题始终显示 */}
         <Typography variant="h5" component="div" gutterBottom>
           {cardContent.question}
         </Typography>
 
-        {/* 选项始终显示，但可以点击 */}
-        <Box sx={{ mb: 2 }}>
-          {optionsList.map((option: string, index: number) => {
-            return (
-              <Button
-                key={index}
-                variant={selectedOption === option ? "contained" : "outlined"}
-                color={selectedOption === option ? "primary" : "inherit"}
-                onClick={() => handleOptionClick(option)}
-                sx={{
-                  display: "block",
-                  textAlign: "left",
-                  width: "100%",
-                  mb: 1,
-                  textTransform: "none",
-                }}
-              >
-                <Typography variant="body1" component="div">
-                  {option}
-                </Typography>
-              </Button>
-            );
-          })}
+        <Box sx={{ mt: 3 }}>
+          {cardContent.options.map((option: string, index: number) => (
+            <Button
+              key={index}
+              variant={selectedOption === index ? "contained" : "outlined"}
+              color={
+                showAnswer
+                  ? index === cardContent.correctOption
+                    ? "success"
+                    : selectedOption === index
+                    ? "error"
+                    : "primary"
+                  : "primary"
+              }
+              onClick={() => handleOptionClick(index)}
+              sx={{ display: "block", width: "100%", mb: 1, textAlign: "left" }}
+              disabled={showAnswer}
+            >
+              {option}
+            </Button>
+          ))}
         </Box>
 
-        {/* 答案和解析仅在显示背面时显示 */}
-        {showBack && (
-          <Box sx={{ mt: 2, p: 2, bgcolor: "#f5f5f5", borderRadius: 1 }}>
-            <Typography variant="h6" color="primary" gutterBottom>
-              答案: {cardContent.answer}
+        {showAnswer && (
+          <Box sx={{ mt: 3, p: 2, bgcolor: "background.paper" }}>
+            <Typography
+              variant="h6"
+              color={isCorrect ? "success.main" : "error.main"}
+              gutterBottom
+            >
+              {`正确答案: ${String.fromCharCode(
+                65 + cardContent.correctOption
+              )}`}
             </Typography>
             {cardContent.explanation && (
-              <Typography variant="body1">
-                <strong>解析:</strong> {cardContent.explanation}
-              </Typography>
+              <Typography variant="body1">{cardContent.explanation}</Typography>
             )}
           </Box>
         )}
       </CardContent>
-      <CardActions sx={{ flexDirection: "column", alignItems: "stretch" }}>
-        {showBack ? (
-          <RatingButtons
-            handleRating={handleRatingWithCheck}
-            nextIntervals={nextIntervals}
-          />
-        ) : null}
+
+      <CardActions sx={{ flexDirection: "column", alignItems: "center" }}>
+        {showAnswer && ratingButtons}
       </CardActions>
     </Card>
   );
@@ -139,20 +117,43 @@ export class SelectionCardTemplate extends TemplateInterface {
       (f) => f[0] === "解析"
     );
 
+    // 获取选项字符串并拆分为数组
+    let optionsString = "";
+    if (
+      optionsIndex >= 0 &&
+      optionsIndex < card.template_fields_content.length
+    ) {
+      optionsString = card.template_fields_content[optionsIndex];
+    }
+
+    // 将选项字符串按换行符拆分为数组
+    const optionsArray = optionsString
+      ? optionsString.split("\n").filter((option) => option.trim() !== "")
+      : [];
+
+    // 获取正确答案并转换为选项索引
+    let correctOption = 0;
+    if (answerIndex >= 0 && answerIndex < card.template_fields_content.length) {
+      const answerText = card.template_fields_content[answerIndex];
+      // 尝试将答案转换为数字索引，如果失败则默认为0
+      const parsedIndex = parseInt(answerText);
+      if (
+        !isNaN(parsedIndex) &&
+        parsedIndex >= 0 &&
+        parsedIndex < optionsArray.length
+      ) {
+        correctOption = parsedIndex;
+      }
+    }
+
     return {
       question:
         questionIndex >= 0 &&
         questionIndex < card.template_fields_content.length
           ? card.template_fields_content[questionIndex]
           : "",
-      options:
-        optionsIndex >= 0 && optionsIndex < card.template_fields_content.length
-          ? card.template_fields_content[optionsIndex]
-          : "",
-      answer:
-        answerIndex >= 0 && answerIndex < card.template_fields_content.length
-          ? card.template_fields_content[answerIndex]
-          : "",
+      options: optionsArray,
+      correctOption: correctOption,
       explanation:
         explanationIndex >= 0 &&
         explanationIndex < card.template_fields_content.length
@@ -172,9 +173,8 @@ export class SelectionCardTemplate extends TemplateInterface {
     return (
       <SelectionCard
         cardContent={props.cardContent}
-        handleRating={props.handleRating}
         emitCorrect={props.emitCorrect}
-        nextIntervals={props.nextIntervals}
+        ratingButtons={props.ratingButtons}
       />
     );
   }

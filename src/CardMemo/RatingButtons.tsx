@@ -1,20 +1,17 @@
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
+import { Box, Button } from "@mui/material";
 import { NextIntervals } from "@/api/Card";
-
-interface RatingButtonsProps {
-  handleRating: (rating: number) => void;
-  nextIntervals: NextIntervals | null;
-}
 
 /**
  * 评分按钮组件，用于显示记忆评分按钮
  * 在不同的卡片模板中共享使用
  */
-export function RatingButtons({
+function RatingButtons({
   handleRating,
   nextIntervals,
-}: RatingButtonsProps) {
+}: {
+  handleRating: (rating: number) => void;
+  nextIntervals: NextIntervals | null;
+}) {
   return (
     <Box
       sx={{
@@ -71,3 +68,5 @@ export function RatingButtons({
     </Box>
   );
 }
+
+export default RatingButtons;

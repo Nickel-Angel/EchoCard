@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 export interface CardData {
   card_id: number;
+  deck_id: number;
   template_id: number;
   template_fields_content: string[];
   due: string;
@@ -132,6 +133,55 @@ export async function submitCardRating(rating: number) {
     return true;
   } catch (error) {
     console.error("提交评分失败:", error);
+    return false;
+  }
+}
+
+/**
+ * 根据筛选条件获取卡片列表
+ * @param templateIds - 模板ID列表，用于筛选特定模板的卡片
+ * @param deckIds - 牌组ID列表，用于筛选特定牌组的卡片
+ * @param statusBitFilter - 状态位过滤器，用于筛选特定学习状态的卡片
+ * @returns Promise<CardData[] | null> - 返回筛选后的卡片列表，筛选失败时返回null
+ * @description 调用后端cardedit.rs中的card_filter命令根据模板ID、牌组ID和状态位过滤器筛选卡片
+ */
+export async function filterCards(
+  templateIds: number[] = [],
+  deckIds: number[] = [],
+  statusBitFilter: number = 0
+): Promise<CardData[] | null> {
+  try {
+    const cards = await invoke<CardData[]>("card_filter", {
+      templateIds,
+      deckIds,
+      statusBitFilter,
+    });
+    return cards;
+  } catch (error) {
+    console.error("筛选卡片失败:", error);
+    return null;
+  }
+}
+
+/**
+ * 更新卡片字段内容
+ * @param cardId - 卡片ID，指定要更新的卡片
+ * @param templateFields - 新的模板字段内容数组
+ * @returns Promise<boolean> - 返回是否成功更新卡片内容，true表示成功，false表示失败
+ * @description 调用后端cardedit.rs中的update_card_content命令更新指定卡片的字段内容
+ */
+export async function updateCardContent(
+  cardId: number,
+  templateFields: string[]
+): Promise<boolean> {
+  try {
+    await invoke("update_card_content", {
+      cardId,
+      templateFields,
+    });
+    return true;
+  } catch (error) {
+    console.error("更新卡片内容失败:", error);
     return false;
   }
 }

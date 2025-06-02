@@ -26,6 +26,7 @@ import { DeckData, fetchDecks, deleteDeck } from "@/api/Deck";
 import { fetchLearningCount } from "@/api/Card";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useTabStore } from "@/store/tabStore";
 
 interface DenseTableProps {
   rows: DeckData[];
@@ -211,6 +212,7 @@ function CardMemoMain() {
   const [error, setError] = useState<string | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const navigate = useNavigate();
+  const { setActiveTab } = useTabStore();
 
   // 处理错误提示关闭
   const handleSnackbarClose = () => {
@@ -242,9 +244,9 @@ function CardMemoMain() {
     const fetchData = async () => {
       await refreshDecks();
     };
-    
+
     fetchData();
-    
+
     // 组件卸载时的清理函数
     return () => {
       // 这里可以添加取消请求的逻辑，如果有使用可取消的请求库
@@ -313,7 +315,7 @@ function CardMemoMain() {
             查看详细统计
           </Button>
         </div>
-        
+
         {/* 错误提示 Snackbar */}
         <Snackbar
           open={snackbarOpen}
@@ -321,14 +323,18 @@ function CardMemoMain() {
           onClose={handleSnackbarClose}
           anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         >
-          <Alert onClose={handleSnackbarClose} severity="error" sx={{ width: "100%" }}>
+          <Alert
+            onClose={handleSnackbarClose}
+            severity="error"
+            sx={{ width: "100%" }}
+          >
             {error}
           </Alert>
         </Snackbar>
       </div>
     );
   }
-  
+
   return (
     <Box
       sx={{
@@ -341,9 +347,14 @@ function CardMemoMain() {
         你还没有卡组哦，快去添加卡组吧~
         <br />
         <br />
-        <Button 
+        <Button
           variant="contained"
-          onClick={() => navigate("/card-edit")}
+          onClick={() => {
+            // 设置全局标签状态为卡片编辑页（索引为1）
+            setActiveTab(1);
+            // 导航回主页
+            navigate("/");
+          }}
         >
           添加卡组
         </Button>

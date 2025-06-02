@@ -9,32 +9,6 @@ pub fn merge_template_fields(fields: Vec<String>) -> String {
 /// 添加新卡片
 ///
 /// 将新卡片添加到指定牌组，使用指定的模板和字段内容
-pub async fn add_card(
-    pool: &SqlitePool,
-    deck_id: i32,
-    template_id: i32,
-    field_contents: Vec<String>,
-) -> Result<i32> {
-    let merged_fields = merge_template_fields(field_contents);
-    let due = Utc::now();
-
-    let card_id = sqlx::query!(
-        "INSERT INTO cards 
-        (deck_id, template_id, template_fields, due, 
-        stability, difficulty, scheduled_days, last_review) 
-        VALUES (?, ?, ?, ?, NULL, NULL, 0, NULL)",
-        deck_id,
-        template_id,
-        merged_fields,
-        due,
-    )
-    .execute(pool)
-    .await?
-    .last_insert_rowid() as i32;
-
-    Ok(card_id)
-}
-
 pub async fn create_card(
     pool: &SqlitePool,
     deck_id: u32,
@@ -305,10 +279,10 @@ pub async fn get_card_by_filter(
             date_params.push(today_end_utc.clone());
         }
 
-        // toreview: last_review 在今天之前，due 在今天及今天之前的卡片
+        // toreview: last_review 在今天之前，due 在今天之后的卡片
         if status_bit_filter & (1 << 2) != 0 {
-            status_conditions.push(format!("(last_review < ? AND due <= ?)"));
-            date_params.push(today_start_utc.clone());
+            status_conditions.push(format!("(last_review <= ? AND due > ?)"));
+            date_params.push(today_end_utc.clone());
             date_params.push(today_end_utc.clone());
         }
 
@@ -411,4 +385,47 @@ pub async fn get_card_by_filter(
     }
 
     Ok(cards)
+}
+
+/// 更新卡片字段内容
+///
+/// 根据卡片ID更新卡片的模板字段内容
+pub async fn update_card_fields(
+    pool: &SqlitePool,
+    card_id: u32,
+    template_fields: Vec<String>,
+) -> Result<()> {
+    let merged_fields = merge_template_fields(template_fields);
+
+    sqlx::query!(
+        "UPDATE cards 
+        SET template_fields = ? 
+        WHERE card_id = ?",
+        merged_fields,
+        card_id
+    )
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn delete_card_by_id(pool: &SqlitePool, card_id: u32) -> Result<()> {
+    // 开启事务
+    let mut tx = pool.begin().await?;
+
+    // 1. 删除卡片的所有复习记录
+    sqlx::query!("DELETE FROM reviews WHERE card_id = ?", card_id)
+        .execute(&mut *tx)
+        .await?;
+
+    // 2. 删除卡片本身
+    sqlx::query!("DELETE FROM cards WHERE card_id = ?", card_id)
+        .execute(&mut *tx)
+        .await?;
+
+    // 提交事务
+    tx.commit().await?;
+
+    Ok(())
 }

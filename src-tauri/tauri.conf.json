@@ -33,7 +33,8 @@
     ],
     "resources": [
       "db/*",
-      "conf.json"
+      "conf.json",
+      "templateConfig.json"      
     ]
   }
 }

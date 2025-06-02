@@ -1,11 +1,10 @@
-import { CardData, NextIntervals } from "@/api/Card";
+import { CardData } from "@/api/Card";
 import { TemplateData } from "@/api/Template";
 
 export interface TemplateProps {
   cardContent: any;
-  handleRating: (rating: number) => void;
-  emitCorrect: () => void;
-  nextIntervals: NextIntervals | null;
+  emitCorrect: (rating: number) => void;
+  ratingButtons?: React.ReactNode; // 可选的评分按钮组件
 }
 
 /**

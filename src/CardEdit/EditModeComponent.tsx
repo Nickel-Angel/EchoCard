@@ -1,24 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-
-// 定义卡片数据接口
-interface CardData {
-  cardId: number;
-  content: string; // 卡片完整内容
-  summary: string; // 卡片概要，从卡片内容中提取的前几个字符
-  template: string;
-  deckName: string;
-}
+import { CardData, updateCardContent } from "@/api/Card";
+import { Snackbar, Alert } from "@mui/material";
+import { getTemplateFields, TemplateFieldData } from "@/api/Template";
 
 /**
  * 编辑模式组件
- * @param card - 卡片数据
+ * @param card - 后端卡片数据 (CardData)
  * @returns 编辑模式组件
  */
 const EditModeComponent = ({ card }: { card: CardData | null }) => {
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
+    "success"
+  );
+  const [templateFields, setTemplateFields] = useState<TemplateFieldData[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // 当卡片变化时，获取模板字段
+    if (card) {
+      setIsLoading(true);
+      getTemplateFields(card.template_id)
+        .then((fields) => {
+          setTemplateFields(fields);
+        })
+        .catch((error) => {
+          console.error("获取模板字段失败:", error);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [card]);
+
   if (!card) {
     return (
       <Box
@@ -38,72 +57,47 @@ const EditModeComponent = ({ card }: { card: CardData | null }) => {
     );
   }
 
-  // 根据卡片所属牌组和模板类型生成相应的编辑字段
+  // 根据卡片模板字段内容生成编辑字段
   const initialFieldValues = (() => {
-    // 文本卡片模板
-    if (card.template === "正反面卡片") {
-      if (card.deckName === "英语单词") {
-        return {
-          正面: `${card.content} (英语单词)`,
-          背面: `释义：这是一个英语单词的释义
-例句：This is an example sentence using the word ${card.content}.`,
-        };
-      } else if (card.deckName === "数学公式") {
-        return {
-          正面: `请说出以下数学概念的定义：${card.content}`,
-          背面: `${card.content}的定义：
-这是一个重要的数学概念，用于解决特定类型的问题。`,
-        };
-      } else {
-        return {
-          正面: `${card.content} (${card.deckName})`,
-          背面: `这是关于${card.deckName}中${card.content}的详细解释。`,
-        };
-      }
+    // 如果有模板字段内容，则使用它们
+    if (
+      card.template_fields_content &&
+      Array.isArray(card.template_fields_content) &&
+      card.template_fields_content.length > 0
+    ) {
+      const fieldValues: { [key: string]: string } = {};
+
+      // 使用模板字段名称作为字段名
+      card.template_fields_content.forEach((content, index) => {
+        // 如果已加载模板字段信息，则使用实际字段名称
+        const fieldName = templateFields[index]?.name || `字段${index + 1}`;
+        fieldValues[fieldName] = content || "";
+      });
+
+      return fieldValues;
     }
-    // 选择题卡片模板
-    else {
-      if (card.deckName === "历史事件") {
-        return {
-          问题: `下列哪一项正确描述了${card.content}这一历史事件？`,
-          选项: `选项A: ${card.content}发生于20世纪初
-选项B: ${card.content}与工业革命有关
-选项C: ${card.content}导致了重大社会变革`,
-          答案: `选项C: ${card.content}导致了重大社会变革`,
-          解析: `${card.content}是一个重要的历史转折点，它确实导致了社会结构的显著变化。`,
-        };
-      } else if (card.deckName === "编程概念") {
-        return {
-          问题: `在编程中，${card.content}的主要作用是什么？`,
-          选项: `选项A: 提高代码执行效率
-选项B: 简化复杂的数据结构
-选项C: 实现代码复用`,
-          答案: `选项A: 提高代码执行效率`,
-          解析: `${card.content}通常用于优化算法，减少计算资源的消耗，从而提高程序的整体性能。`,
-        };
-      } else if (card.deckName === "地理知识") {
-        return {
-          问题: `关于${card.content}，下列说法正确的是：`,
-          选项: `选项A: 位于北半球
-选项B: 是世界上最大的大洲
-选项C: 拥有多样的气候带`,
-          答案: `选项C: 拥有多样的气候带`,
-          解析: `${card.content}由于其广阔的地理范围，跨越了多个纬度，因此形成了从热带到寒带的多样气候带。`,
-        };
-      } else {
-        return {
-          问题: `关于${card.deckName}中的${card.content}，以下哪项是正确的？`,
-          选项: `选项A: ${card.content}的第一个特性
-选项B: ${card.content}的第二个特性
-选项C: ${card.content}的第三个特性`,
-          答案: `选项A: ${card.content}的第一个特性`,
-          解析: `${card.content}的第一个特性是最基本也是最重要的，它定义了${card.content}在${card.deckName}领域中的核心价值。`,
-        };
-      }
-    }
+
+    // 如果没有模板字段内容，则返回一个包含卡片ID的默认字段
+    return {
+      卡片ID: card.card_id.toString() || "",
+    };
   })();
 
   const [fieldValues, setFieldValues] = useState(initialFieldValues);
+
+  // 当模板字段加载完成后，更新字段值
+  useEffect(() => {
+    if (templateFields.length > 0 && card.template_fields_content) {
+      const updatedFieldValues: { [key: string]: string } = {};
+      
+      card.template_fields_content.forEach((content, index) => {
+        const fieldName = templateFields[index]?.name || `字段${index + 1}`;
+        updatedFieldValues[fieldName] = content || "";
+      });
+      
+      setFieldValues(updatedFieldValues);
+    }
+  }, [templateFields, card.template_fields_content]);
 
   // 处理字段值变化
   const handleFieldChange = (fieldName: string, value: string) => {
@@ -114,8 +108,52 @@ const EditModeComponent = ({ card }: { card: CardData | null }) => {
   };
 
   // 保存修改
-  const handleSave = () => {
-    alert("保存成功！在实际应用中，这里会调用API保存修改");
+  const handleSave = async () => {
+    try {
+      // 将字段值对象转换回数组格式，保持原始顺序
+      const updatedFields: string[] = [];
+      
+      // 使用模板字段的顺序来确保数据正确保存
+      templateFields.forEach((field, index) => {
+        // 查找字段名对应的值
+        const value = fieldValues[field.name] || "";
+        updatedFields[index] = value;
+      });
+
+      // 如果没有模板字段信息，则使用原始的方法
+      if (templateFields.length === 0) {
+        Object.keys(fieldValues).forEach((key) => {
+          const index = parseInt(key.replace("字段", "")) - 1;
+          if (!isNaN(index) && index >= 0) {
+            updatedFields[index] = fieldValues[key];
+          }
+        });
+      }
+
+      // 确保数组没有空洞
+      const updatedTemplateFields = updatedFields.map((field) => field || "");
+
+      // 调用API保存修改
+      const success = await updateCardContent(card.card_id, updatedTemplateFields);
+
+      if (success) {
+        setSnackbarMessage("保存成功！");
+        setSnackbarSeverity("success");
+      } else {
+        setSnackbarMessage("保存失败，请重试");
+        setSnackbarSeverity("error");
+      }
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("保存卡片内容时出错:", error);
+      setSnackbarMessage("保存失败，请重试");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
   };
 
   return (
@@ -155,6 +193,20 @@ const EditModeComponent = ({ card }: { card: CardData | null }) => {
           保存修改
         </Button>
       </Box>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

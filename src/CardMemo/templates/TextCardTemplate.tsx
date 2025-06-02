@@ -4,80 +4,53 @@ import {
   TemplateInterface,
   TemplateProps,
 } from "@/CardMemo/templates/TemplateInterface";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardActions from "@mui/material/CardActions";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import { RatingButtons } from "./RatingButtons";
 
-function TextCard({
-  cardContent,
-  handleRating,
-  emitCorrect,
-  nextIntervals,
-}: TemplateProps) {
-  // 使用React hooks管理状态
-  const [showBack, setShowBack] = useState(false);
+function TextCard({ cardContent, emitCorrect, ratingButtons }: TemplateProps) {
+  const [showAnswer, setShowAnswer] = useState(false);
 
-  const handleToggleContent = () => {
-    setShowBack(!showBack);
-  };
-
-  const isCorrect = (rating: number): boolean => {
-    return rating > 1;
-  };
-
-  const handleRatingWithCheck = (baseRating: number) => {
-    // 判断用户选择是否正确
-    if (isCorrect(baseRating)) {
-      emitCorrect();
-    }
-    // 调用原始的handleRating函数
-    handleRating(baseRating);
-  };
+  // 当卡片内容变化时重置显示答案状态
+  useEffect(() => {
+    setShowAnswer(false);
+  }, [cardContent]);
 
   return (
-    <Card>
+    <Card sx={{ width: "100%", maxWidth: 800, mx: "auto", my: 2 }}>
       <CardContent>
-        <Typography
-          variant="h5"
-          component="div"
-          sx={{ whiteSpace: "pre-line" }} // 保留换行符
-        >
+        <Typography variant="h5" component="div" gutterBottom>
           {cardContent.front}
         </Typography>
-        {showBack && (
-          <>
-            <Box sx={{ my: 2, borderTop: 1, borderColor: "divider", pt: 2 }}>
-              <Typography
-                variant="h5"
-                component="div"
-                sx={{ whiteSpace: "pre-line" }} // 保留换行符
-              >
-                {cardContent.back}
-              </Typography>
-            </Box>
-          </>
+
+        {showAnswer && (
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              答案:
+            </Typography>
+            <Typography variant="body1">{cardContent.back}</Typography>
+          </Box>
         )}
       </CardContent>
-      <CardActions sx={{ flexDirection: "column", alignItems: "stretch" }}>
-        {showBack ? (
-          <RatingButtons
-            handleRating={handleRatingWithCheck}
-            nextIntervals={nextIntervals}
-          />
-        ) : (
+
+      <CardActions sx={{ flexDirection: "column", alignItems: "center" }}>
+        {!showAnswer ? (
           <Button
             variant="contained"
             color="primary"
-            onClick={handleToggleContent}
-            fullWidth
+            onClick={() => {
+              setShowAnswer(true);
+            }}
+            sx={{ mb: 1, width: "50%" }}
           >
-            显示背面
+            显示答案
           </Button>
+        ) : (
+          <>{ratingButtons}</>
         )}
       </CardActions>
     </Card>
@@ -144,9 +117,8 @@ export class TextCardTemplate extends TemplateInterface {
     return (
       <TextCard
         cardContent={props.cardContent}
-        handleRating={props.handleRating}
         emitCorrect={props.emitCorrect}
-        nextIntervals={props.nextIntervals}
+        ratingButtons={props.ratingButtons}
       />
     );
   }

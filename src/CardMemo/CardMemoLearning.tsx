@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { Box, Button } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useLocation, useNavigate } from "react-router-dom";
-import Box from "@mui/material/Box";
-import { createDeckData } from "@/api/Deck";
+import { useEffect, useState } from "react";
 import {
   loadCardsFromBackend,
   loadNextState,
@@ -9,9 +9,11 @@ import {
   CardData,
   NextIntervals,
 } from "@/api/Card";
+import { createDeckData } from "@/api/Deck";
 import { loadTemplate, TemplateData } from "@/api/Template";
 import { TemplateFactory } from "@/CardMemo/templates/TemplateFactory";
 import { TemplateInterface } from "@/CardMemo/templates/TemplateInterface";
+import RatingButtons from "@/CardMemo/RatingButtons";
 
 function CardMemoLearning() {
   const location = useLocation();
@@ -37,6 +39,14 @@ function CardMemoLearning() {
 
   // 解析后的卡片内容
   const [parsedCardContent, setParsedCardContent] = useState<any>(null);
+
+  // 返回主页的处理函数
+  const handleReturnHome = () => {
+    // 确认是否要返回主页
+    if (window.confirm("确定要返回主页吗？当前学习进度将不会保存。")) {
+      navigate("/");
+    }
+  };
 
   const processCurrentCard = async () => {
     // 如果没有卡片或已经学习完所有卡片
@@ -80,7 +90,7 @@ function CardMemoLearning() {
 
     if (template) {
       // 使用模板工厂创建对应的模板实例
-      const instance = TemplateFactory.createTemplate(template);
+      const instance = await TemplateFactory.createTemplate(template);
       setTemplateInstance(instance);
 
       // 使用模板实例解析卡片内容
@@ -134,6 +144,9 @@ function CardMemoLearning() {
   const handleCardRating = async (rating: number) => {
     console.log(`卡片评分: ${rating}`);
 
+    // 调用 emitCorrect 函数，根据评分判断是否为正确答案
+    emitCorrect(rating);
+
     // 提交评分到后端
     await submitCardRating(rating);
 
@@ -141,20 +154,39 @@ function CardMemoLearning() {
     setCurrentCardIndex(currentCardIndex + 1);
   };
 
-  // 正确答案的回调函数
-  const emitCorrect = () => {
-    setCorrectCount(correctCount + 1);
+  // 发出正确答案信号的函数
+  const emitCorrect = (rating: number) => {
+    // 只有当评分大于1（即不是"忘记"按钮）时才计为正确
+    if (rating > 1) {
+      setCorrectCount(correctCount + 1);
+    }
   };
 
   return (
     <Box sx={{ minWidth: 320, width: "100%" }}>
+      {/* 返回主页按钮 */}
+      <Box sx={{ display: "flex", justifyContent: "flex-start", mb: 2 }}>
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBackIcon />}
+          onClick={handleReturnHome}
+          size="small"
+        >
+          返回主页
+        </Button>
+      </Box>
+
       {templateInstance && parsedCardContent ? (
         // 使用模板实例渲染卡片
         templateInstance.renderCard({
           cardContent: parsedCardContent,
-          handleRating: handleCardRating,
           emitCorrect,
-          nextIntervals,
+          ratingButtons: (
+            <RatingButtons
+              handleRating={handleCardRating}
+              nextIntervals={nextIntervals}
+            />
+          ),
         })
       ) : (
         <Box

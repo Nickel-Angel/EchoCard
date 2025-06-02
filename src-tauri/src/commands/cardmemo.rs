@@ -9,7 +9,7 @@ use crate::controller::card_controller::{
     get_card_count_learned_today, get_cards_by_page, update_card_state,
 };
 use crate::controller::deck_controller::{delete_deck_by_id, get_decks};
-use crate::controller::review_controller::{create_review, train_fsrs_parameters};
+use crate::controller::review_controller::create_review;
 use crate::controller::template_controller::{get_template, parse_template};
 use crate::models::Card;
 use crate::models::Deck;
