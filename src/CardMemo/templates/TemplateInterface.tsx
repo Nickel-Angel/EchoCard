@@ -22,8 +22,7 @@ export abstract class TemplateInterface {
   /**
    * 渲染卡片组件
    * @param cardContent 解析后的卡片内容
-   * @param handleRating 评分处理函数
-   * @param nextIntervals 下一个间隔状态
+   * @param emitCorrect 评分处理函数
    * @returns JSX元素
    */
   abstract renderCard(props: TemplateProps): JSX.Element;
