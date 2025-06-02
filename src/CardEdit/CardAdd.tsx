@@ -263,7 +263,7 @@ function CardAdd() {
             onClick={handleBack}
             sx={{ mr: 2, borderRadius: 2, minWidth: 120 }}
           >
-            返回列表
+            返回
           </Button>
         </Box>
       </Box>
@@ -340,7 +340,7 @@ function CardAdd() {
             </Typography>
           )}
 
-          <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between" }}>
+          <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end" }}>
             <Button variant="outlined" onClick={resetForm}>
               重置
             </Button>
@@ -349,7 +349,7 @@ function CardAdd() {
               color="primary"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              sx={{ borderRadius: 2, minWidth: 120 }}
+              sx={{ ml: 2, borderRadius: 2, minWidth: 120 }}
             >
               {isSubmitting ? "添加中..." : "添加卡片"}
             </Button>

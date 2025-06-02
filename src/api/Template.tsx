@@ -112,15 +112,18 @@ export async function loadTemplate(
  * @param templateFields - 模板字段列表，每个字段包含名称和是否为正面
  * @param className - 模板类名，用于在TemplateFactory中创建模板实例
  * @param importPath - 模板导入路径，用于在TemplateFactory中导入模板类
+ * @param fileContent - 模板文件内容（可选），如果提供则后端会保存文件
  * @returns Promise<{success: boolean, message: string, templateId?: number}> - 返回添加结果
  * @description 1. 调用后端add_template_config API更新模板配置
  *              2. 调用后端add_template API将模板数据写入数据库
+ *              3. 如果提供了fileContent，后端会将文件保存到templates目录
  */
 export async function addTemplate(
   templateName: string,
   templateFields: [string, boolean][],
   className: string,
-  importPath: string
+  importPath: string,
+  fileContent?: string
 ): Promise<{ success: boolean; message: string; templateId?: number }> {
   try {
     // 1. 调用后端add_template_config API更新模板配置
@@ -128,6 +131,7 @@ export async function addTemplate(
       templateName,
       className,
       importPath,
+      fileContent, // 传递文件内容给后端
     });
 
     // 2. 调用后端add_template API将模板数据写入数据库
