@@ -75,9 +75,7 @@ const PreviewModeComponent = ({ card }: { card: CardData | null }) => {
     // 创建一个简化版的 TemplateProps，用于预览模式
     const previewProps = {
       cardContent: parsedCardContent,
-      handleRating: () => {}, // 预览模式不需要实际评分
       emitCorrect: () => {}, // 预览模式不需要记录正确答案
-      nextIntervals: null, // 预览模式不需要间隔信息
     };
 
     // 使用模板实例渲染卡片
