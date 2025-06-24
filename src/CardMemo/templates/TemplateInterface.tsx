@@ -2,14 +2,11 @@ import { CardData } from "@/api/Card";
 import { TemplateData } from "@/api/Template";
 
 export interface TemplateProps {
-  cardContent: any;
-  emitCorrect: (rating: number) => void;
-  ratingButtons?: React.ReactNode; // 可选的评分按钮组件
+  cardContent: any; // 解析后的卡片内容
+  emitCorrect: (rating: number) => void; // 评分处理函数
+  ratingButtons?: React.ReactNode; // 自定义评分按钮
 }
 
-/**
- * 模板抽象类，定义所有模板组件需要实现的方法
- */
 export abstract class TemplateInterface {
   /**
    * 解析卡片内容

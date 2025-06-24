@@ -29,29 +29,20 @@ import {
 
 // 模拟牌组数据 - 实际应用中应从后端获取
 const generateDecks = (): DeckDataItem[] => [
-  { deckIndex: 0, name: "全部", tolearn: 0, learning: 0, toreview: 0 },
+  { deckIndex: 0, name: "全部", tolearn: 396, learning: 15, toreview: 61 },
   {
     deckIndex: 1,
-    name: "英语单词",
+    name: "示例卡组",
     tolearn: 159,
     learning: 6,
     toreview: 24,
   },
   {
     deckIndex: 2,
-    name: "Ice cream sandwich",
+    name: "英语单词",
     tolearn: 237,
     learning: 9,
     toreview: 37,
-  },
-  { deckIndex: 3, name: "Eclair", tolearn: 262, learning: 16, toreview: 24 },
-  { deckIndex: 4, name: "Cupcake", tolearn: 305, learning: 3, toreview: 67 },
-  {
-    deckIndex: 5,
-    name: "Gingerbread",
-    tolearn: 356,
-    learning: 16,
-    toreview: 49,
   },
 ];
 
